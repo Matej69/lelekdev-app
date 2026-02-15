@@ -1,7 +1,7 @@
 import Header from "@/components/protected/header";
 import Sidebar from "@/components/protected/sidebar";
 
-export default function SignIn({children}: {children: React.ReactNode}) {
+export default function Layout({children}: {children: React.ReactNode}) {
 
     return (
         <div className="flex flex-col w-full h-full min-h-0 gap-3">
