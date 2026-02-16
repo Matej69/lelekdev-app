@@ -17,7 +17,7 @@ export const useAuth = () => {
             if (!res.ok) throw new Error('Sign in failed');
         },
         onSuccess: () => {
-            router.push('/products');
+            router.push('/tasks');
         },
     });
 

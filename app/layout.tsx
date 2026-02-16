@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="h-screen w-full bg-[url('/background-tile.jpg')] bg-repeat bg-center bg-gray-50 dark:bg-black flex justify-center">
-          <main className="flex max-h-screen w-full max-w-8xl mx-auto flex-col items-start justify-between py-8 px-8 border border-gray-800">
+          <main className="flex max-h-screen w-full max-w-8xl mx-auto flex-col items-start justify-between py-8 px-8">
             <Providers>
               {children}
             </Providers>

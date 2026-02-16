@@ -1,5 +1,5 @@
 import Header from "@/components/protected/header/header";
-import Sidebar from "@/components/protected/sidebar";
+import Sidebar from "@/components/protected/sidebar/sidebar";
 import { decodeJWT } from "@/utils/auth/jwt";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -21,7 +21,7 @@ export default async function Layout({children}: {children: React.ReactNode}) {
             <Header email={email} role={role} />
             <div className="flex flex-row flex-1 min-h-0 gap-4">
                 <Sidebar />
-                <div className="flex flex-col w-full max-h-full p-2 overflow-y-auto border shadow-[8px_8px_0_black]">
+                <div className="flex flex-col w-full max-h-full p-2 overflow-y-auto border">
                     {children}
                 </div>
             </div>
