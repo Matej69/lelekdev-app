@@ -1,6 +1,11 @@
 import SignOutButton from "./sign-out-button";
 
-export default function Header() {
+interface HeaderProps {
+    email: string;
+    role: string;
+}
+
+export default function Header({ email, role }: HeaderProps) {
     return (
         <div className="flex items-center justify-between w-full h-16">
             { /* Search Bar */ }
@@ -17,8 +22,8 @@ export default function Header() {
                 <SignOutButton />
                 { /* User info */ }
                 <div className="flex flex-col items-start h-full justify-center bg-white border border-black px-2">
-                    <p className="font-bold">DivovksiVrag@gmail.com</p>
-                    <p className="text-gray-500">ADMIN</p>
+                    <p className="font-bold">{email}</p>
+                    <p className="text-gray-500">{role}</p>
                 </div>
             </div>
         </div>
