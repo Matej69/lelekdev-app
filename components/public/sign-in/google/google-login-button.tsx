@@ -1,12 +1,12 @@
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
-import { OAuthState } from './types';
+import { OAuthState } from '../types';
 import React from 'react';
 
 interface GoogleLoginButtonProps {
-    setOAuthState: (state: OAuthState) => void;
+    onSuccess: (idToken: string) => void;
 }
 
-export const GoogleLoginButton = React.memo( ({ setOAuthState }: GoogleLoginButtonProps) => {
+export const GoogleLoginButton = React.memo( ({ onSuccess }: GoogleLoginButtonProps) => {
     console.log("Rendering GoogleLoginButton");
     return (
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
@@ -15,12 +15,12 @@ export const GoogleLoginButton = React.memo( ({ setOAuthState }: GoogleLoginButt
                 width={10000}
                 onSuccess={(response) => {
                     if (response.credential) {
-                        setOAuthState({ credential: response.credential, error: null });
+                        onSuccess(response.credential)
                     } else {
-                        setOAuthState({ credential: null, error: 'No credential received from Google' });
+                        console.error('Google login succeeded but no credential found');
                     }
                 }}
-                onError={() => setOAuthState({ credential: null, error: 'Error signing in with Google' })}
+                onError={() => console.error('Google login failed')}
                 />
         </GoogleOAuthProvider>
     );

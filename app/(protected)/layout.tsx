@@ -1,7 +1,14 @@
-import Header from "@/components/protected/header";
+import Header from "@/components/protected/header/header";
 import Sidebar from "@/components/protected/sidebar";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function Layout({children}: {children: React.ReactNode}) {
+export default async function Layout({children}: {children: React.ReactNode}) {
+
+    const accessToken = (await cookies()).get("access_token")?.value;
+    if(!accessToken) { 
+        redirect('/sign-in') 
+    }
 
     return (
         <div className="flex flex-col w-full h-full min-h-0 gap-3">
