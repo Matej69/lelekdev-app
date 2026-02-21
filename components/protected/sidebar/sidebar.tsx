@@ -1,6 +1,6 @@
 'use client';
 
-import { Icon, ListTodo, UtensilsCrossed } from 'lucide-react';
+import { ListTodo, UtensilsCrossed } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const navigationItemsData = [

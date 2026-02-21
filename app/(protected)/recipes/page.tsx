@@ -1,5 +1,5 @@
 
-export default function Recipes() {
+export default function RecipesPage() {
   return (
     <>
       <p>RECIPES</p>

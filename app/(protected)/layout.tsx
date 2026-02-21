@@ -21,7 +21,7 @@ export default async function Layout({children}: {children: React.ReactNode}) {
             <Header email={email} role={role} />
             <div className="flex flex-row flex-1 min-h-0 gap-4">
                 <Sidebar />
-                <div className="flex flex-col w-full max-h-full p-2 overflow-y-auto border">
+                <div className="flex flex-col w-full max-h-full p-2 overflow-y-auto">
                     {children}
                 </div>
             </div>
