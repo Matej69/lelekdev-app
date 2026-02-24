@@ -17,6 +17,10 @@ export default function AutosizeTextarea({ placeholder, register }: AutosizeText
     }
   };
 
+  useLayoutEffect(() => {
+    resize()
+  }, []);
+
   return (
     <>
       <textarea

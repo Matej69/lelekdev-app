@@ -1,18 +1,18 @@
 'use client';
 
-import { useTasks } from "@/api/protected/tasks/useTasks";
+import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { generateTrackingId } from "@/components/common/utils";
-import { TaskModel, TaskSchema } from "@/components/protected/tasks/model";
+import { TaskModel } from "@/components/protected/tasks/model";
 import Task from "@/components/protected/tasks/task";
-import { mockTasks } from "@/mock/task";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { CopyPlus } from "lucide-react";
-import { useForm } from "react-hook-form";
 
 
 export default function TasksPage() {
   //const taskData = mockTasks
-  const taskService = useTasks("2db3ebfb-83a9-4833-bb2d-1352f90f11cf")
+  const { id: userId } = useUserContext()
+  const taskService = useTasksApi(userId)
+  
   
   if (taskService.get.isLoading)
     return <div>Loading tasks...</div>;
@@ -22,7 +22,7 @@ export default function TasksPage() {
   const onCreate = () => {
     const newTask: TaskModel = {
       id: generateTrackingId(),
-      ownerId: "2db3ebfb-83a9-4833-bb2d-1352f90f11cf",
+      ownerId: userId,
       items: [],
     }
     taskService.create.mutate(newTask)
@@ -36,14 +36,7 @@ export default function TasksPage() {
       </div>
       {/* Task list */}
       {
-        tasks.map((task) => (
-          <Task key={task.id} data={task} taskService={taskService}
-            //onDelete={() => taskService.deleteTask.mutate(task.id)} 
-            //onSave={() => taskService.update.mutate(task) } 
-            //onTaskItemAdd={() => {}} 
-            //onTaskItemDelete={(id) => {}}
-          />
-        ))
+        tasks.map((task) => <Task key={task.id} data={task} taskService={taskService}/>)
       }
     </div>
   );

@@ -4,7 +4,7 @@ import { TaskModel } from '@/components/protected/tasks/model';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 
 
-export const useTasks = (ownerId: string) => {
+export const useTasksApi = (ownerId: string) => {
 
   const get = useQuery<TaskModel[]>({
     queryKey: ['tasks', ownerId],

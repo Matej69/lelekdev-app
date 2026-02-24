@@ -6,9 +6,9 @@ import { useState } from "react";
 import { TaskModel, TaskSchema } from "./model";
 import { TaskItemModel } from "./item/model";
 import TaskItem from "./item/task-item";
-import { FieldErrors, Resolver, useForm } from "react-hook-form";
+import { FieldErrors, Resolver, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTasks } from "@/api/protected/tasks/useTasks";
+import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { get } from "http";
 import { generateTrackingId } from "@/components/common/utils";
 
@@ -32,17 +32,19 @@ const taskColors = {
 
 interface TaskProps {
     data: TaskModel
-    taskService: ReturnType<typeof useTasks>
+    taskService: ReturnType<typeof useTasksApi>
 }
 
 export default function Task(p: TaskProps) {
 
-  const { register, handleSubmit, formState: { errors, isDirty }, getValues, setValue, watch } = useForm<TaskModel>({
+  const { register, handleSubmit, formState: { errors, isDirty }, getValues, setValue, control } = useForm<TaskModel>({
     resolver: zodResolver(TaskSchema) as Resolver<TaskModel>,
     defaultValues: p.data
   });
-
-  const formValues = watch();
+  const { fields, update, remove, append } = useFieldArray({
+    control,
+    name: "items",
+  });
   
   const onDelete = () => p.taskService.deleteTask.mutate(p.data.id);
   const onSave = () => {
@@ -57,11 +59,9 @@ export default function Task(p: TaskProps) {
     }
       setValue("items", [...getValues().items, newItem])
   };
-  const onTaskItemDelete = (id: string) => {
-    const itemsToRemain = getValues().items.filter(item => item.id !== id)
-    if(itemsToRemain.length != getValues().items.length)
-      setValue("items", itemsToRemain)
-  };
+  const onCompleted = (index: number) => {
+    update(2, { ...fields[2], completed: true });
+  }
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
@@ -81,16 +81,14 @@ export default function Task(p: TaskProps) {
         </div>
         {/* Task items */}
         {
-          getValues().items.map((item, i) => {
-            const taskItemRegister = register(`items.${i}.content`);
-            return <TaskItem 
-              key={item.id} 
-              data={item} 
-              formProps={{ 
-                register: taskItemRegister, 
-                errors: errors.items?.[i] 
-              }} 
-              onDelete={onTaskItemDelete.bind(null, item.id)} 
+          fields.map((item, i) => {
+            return <TaskItem
+              key={item.id}
+              data={item}
+              register={register(`items.${i}.content`)} 
+              errors={errors.items?.[i]}
+              onDelete={() => remove(i)}
+              onCompleted={() => onCompleted(i)}
               />
           })
         }
