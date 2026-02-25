@@ -4,8 +4,10 @@ import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
 import Task from "@/components/protected/tasks/task";
+import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { CopyPlus } from "lucide-react";
+import { useEffect } from "react";
 
 
 export default function TasksPage() {
@@ -13,16 +15,18 @@ export default function TasksPage() {
   const { id: userId } = useUserContext()
   const taskService = useTasksApi(userId)
   
-  
   if (taskService.get.isLoading)
     return <div>Loading tasks...</div>;
-
+  
   const tasks = taskService.get.data || [];
+  console.log(tasks)
 
   const onCreate = () => {
     const newTask: TaskModel = {
       id: generateTrackingId(),
       ownerId: userId,
+      title: "[new]",
+      color: "#FF0000",
       items: [],
     }
     taskService.create.mutate(newTask)
@@ -36,7 +40,11 @@ export default function TasksPage() {
       </div>
       {/* Task list */}
       {
-        tasks.map((task) => <Task key={task.id} data={task} taskService={taskService}/>)
+        tasks.map((task) =>  
+          <TaskFormProvider key={`provider-${task.id}`} defaultValues={task}>
+            <Task key={task.id} taskService={taskService}/>
+          </TaskFormProvider>
+        )
       }
     </div>
   );

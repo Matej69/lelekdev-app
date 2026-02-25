@@ -1,16 +1,18 @@
 'use client';
 
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
-import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
+import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Paintbrush, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { TaskModel, TaskSchema } from "./model";
 import { TaskItemModel } from "./item/model";
 import TaskItem from "./item/task-item";
-import { FieldErrors, Resolver, useFieldArray, useForm } from "react-hook-form";
+import { FieldErrors, Resolver, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { get } from "http";
 import { generateTrackingId } from "@/components/common/utils";
+import { Popover } from "@/components/common/Popover";
+import { ColorPicker } from "@/components/common/ColorPicker";
 
 const taskColors = {
   blue: '#BCF2FF',
@@ -31,25 +33,22 @@ const taskColors = {
 
 
 interface TaskProps {
-    data: TaskModel
     taskService: ReturnType<typeof useTasksApi>
 }
 
 export default function Task(p: TaskProps) {
-
-  const { register, handleSubmit, formState: { errors, isDirty }, getValues, setValue, control } = useForm<TaskModel>({
-    resolver: zodResolver(TaskSchema) as Resolver<TaskModel>,
-    defaultValues: p.data
-  });
-  const { fields, update, remove, append } = useFieldArray({
-    control,
+  const form = useFormContext<TaskModel>()
+  const taskColor = form.watch('color')
+  const items = form.watch('items');
+  const formItems = useFieldArray({
+    control: form.control,
     name: "items",
   });
   
-  const onDelete = () => p.taskService.deleteTask.mutate(p.data.id);
+  const onDelete = () => p.taskService.deleteTask.mutate(form.getValues().id);
   const onSave = () => {
-    if(isDirty)
-      handleSubmit((data) => p.taskService.update.mutate(data))()
+    if(form.formState.isDirty)
+      form.handleSubmit((data) => p.taskService.update.mutate(data))()
   };
   const onTaskItemAdd = () => {
     const newItem: TaskItemModel = {
@@ -57,39 +56,54 @@ export default function Task(p: TaskProps) {
       content: "",
       completed: false,
     }
-      setValue("items", [...getValues().items, newItem])
+    formItems.append(newItem);
   };
-  const onCompleted = (index: number) => {
-    update(2, { ...fields[2], completed: true });
+
+  const onItemDelete = (index: number) => {
+    formItems.remove(index)
+  }
+
+  const onComplete = (index: number) => {
+    const old = items[index]
+    formItems.update(index, { ...old, completed: !old.completed });
+  }
+
+  const onColorChange = (color: string) => {
+    form.setValue("color", color, { shouldDirty: true })
   }
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
         {/* Header */}
-        <div className="flex justify-center p-2" style={{ background: taskColors.blue }}>
+        <div className="flex justify-center p-2" style={{ background: taskColor }}>
           {/* Title */}
           <div className="flex grow">
              <Dot /> 
-              <p className="font-bold">{p.data.id || ""}</p>
+             <div>
+              <input {...form.register('title')}></input>
+              { form.formState.errors?.title?.message &&  <p className="text-red-500 pl-1">{form.formState.errors?.title?.message}</p>}
+             </div>
           </div>
           {/* Actions */}
           <div className="flex items-center group hover:cursor-pointer gap-3">
+            <Popover trigger={<Paintbrush className="cursor-pointer"/>}>
+                <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorChange}/>
+            </Popover>
               <CopyPlus className="cursor-pointer" onClick={onTaskItemAdd} />
-              <Save className="cursor-pointer" onClick={onSave} color={isDirty ? "black" : "skyblue"}/>
+              <Save className="cursor-pointer" onClick={onSave} color={form.formState.isDirty ? "black" : "gray"}/>
               <Trash2 className="cursor-pointer" onClick={onDelete} />
           </div>
         </div>
-        {/* Task items */}
+        {/* Task items */}        
         {
-          fields.map((item, i) => {
+          items.map((item, i) => {
             return <TaskItem
               key={item.id}
               data={item}
-              register={register(`items.${i}.content`)} 
-              errors={errors.items?.[i]}
-              onDelete={() => remove(i)}
-              onCompleted={() => onCompleted(i)}
-              />
+              index={i}
+              onDelete={() => onItemDelete(i)}
+              onComplete={() => onComplete(i)}
+            />
           })
         }
       </div>

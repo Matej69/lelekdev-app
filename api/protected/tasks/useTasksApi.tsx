@@ -45,6 +45,9 @@ export const useTasksApi = (ownerId: string) => {
         ...body, 
         items: body.items.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
+      console.log(body)
+      console.log("UPDATE")
+      console.log(sanitizedBody)
         const res = await fetch(`http://localhost:8080/tasks?ownerId=${ownerId}`, {
             method: 'PUT',
             headers: {

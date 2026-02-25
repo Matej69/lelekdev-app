@@ -7,7 +7,6 @@ interface GoogleLoginButtonProps {
 }
 
 export const GoogleLoginButton = React.memo( ({ onSuccess }: GoogleLoginButtonProps) => {
-    console.log("Rendering GoogleLoginButton");
     return (
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
             <GoogleLogin
