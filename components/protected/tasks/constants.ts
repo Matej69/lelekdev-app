@@ -1,0 +1,16 @@
+export const taskColors = {
+  blue: '#BCF2FF',
+  teal: '#B3FFF0',
+  mint: '#C3FFD9',
+  green: '#BCFFE7',
+  lime: '#E6FFB3',
+  yellow: '#EDFFBC',
+  beige: '#FFF1C3',
+  orange: '#FFD8B3',
+  peach: '#FFE3BC',
+  coral: '#FFC2B3',
+  red: '#FFB3B3',
+  pink: '#FAD5FF',
+  lavender: '#E8D3FF',
+  purple: '#E3C8FF',
+};

@@ -3,8 +3,9 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
-import Task, { taskColors } from "@/components/protected/tasks/task";
+import Task from "@/components/protected/tasks/task";
 import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
+import { createTask } from "@/components/protected/tasks/useTasks";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { CopyPlus } from "lucide-react";
 import { useEffect } from "react";
@@ -20,17 +21,7 @@ export default function TasksPage() {
   
   const tasks = taskService.get.data || [];
 
-  const onCreate = () => {
-    const newTask: TaskModel = {
-      id: generateTrackingId(),
-      ownerId: userId,
-      title: "[NEW]",
-      color: taskColors.beige,
-      sortOrder: tasks.length + 1,
-      items: [],
-    }
-    taskService.create.mutate(newTask)
-  }
+  const onCreate = () => createTask(userId, tasks, taskService.create.mutate)
 
   return (
     <div className="flex flex-col h-full font-sans gap-6">
