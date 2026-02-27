@@ -13,8 +13,9 @@ import { get } from "http";
 import { generateTrackingId } from "@/components/common/utils";
 import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
+import { normalizeTaskItemsSortOrder } from "./utils";
 
-const taskColors = {
+export const taskColors = {
   blue: '#BCF2FF',
   teal: '#B3FFF0',
   mint: '#C3FFD9',
@@ -50,17 +51,21 @@ export default function Task(p: TaskProps) {
     if(form.formState.isDirty)
       form.handleSubmit((data) => p.taskService.update.mutate(data))()
   };
-  const onTaskItemAdd = () => {
+  const onTaskItemAdd = () => { 
     const newItem: TaskItemModel = {
       id: generateTrackingId(),
       content: "",
       completed: false,
+      sortOrder: form.getValues().items.length + 1
     }
     formItems.append(newItem);
   };
 
   const onItemDelete = (index: number) => {
-    formItems.remove(index)
+    let items = form.getValues().items
+    items = items.filter((el, i) => i != index)
+    items = normalizeTaskItemsSortOrder(items)
+    form.setValue('items', items, { shouldDirty: true })
   }
 
   const onComplete = (index: number) => {

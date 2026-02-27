@@ -3,7 +3,7 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
-import Task from "@/components/protected/tasks/task";
+import Task, { taskColors } from "@/components/protected/tasks/task";
 import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { CopyPlus } from "lucide-react";
@@ -19,14 +19,14 @@ export default function TasksPage() {
     return <div>Loading tasks...</div>;
   
   const tasks = taskService.get.data || [];
-  console.log(tasks)
 
   const onCreate = () => {
     const newTask: TaskModel = {
       id: generateTrackingId(),
       ownerId: userId,
-      title: "[new]",
-      color: "#FF0000",
+      title: "[NEW]",
+      color: taskColors.beige,
+      sortOrder: tasks.length + 1,
       items: [],
     }
     taskService.create.mutate(newTask)

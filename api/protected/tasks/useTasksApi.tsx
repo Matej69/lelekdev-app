@@ -1,20 +1,33 @@
 import { queryClient } from '@/components/common/queryClient/queryClient';
 import { nullIfTrackingIdElseKeep } from '@/components/common/utils';
-import { TaskModel } from '@/components/protected/tasks/model';
+import { TaskItemModel, TaskItemSchema } from '@/components/protected/tasks/item/model';
+import { TaskModel, TaskSchema } from '@/components/protected/tasks/model';
+import { normalizeTaskSortOrder } from '@/components/protected/tasks/utils';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
+import { isArray } from 'util';
 
 
 export const useTasksApi = (ownerId: string) => {
 
+  // Fetches list of tasks but ignores items that that do not pass validation
   const get = useQuery<TaskModel[]>({
     queryKey: ['tasks', ownerId],
-    queryFn: async () => {
+    queryFn: async (): Promise<TaskModel[]> => {
       const res = await fetch(`http://localhost:8080/tasks?ownerId=${ownerId}`, {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to fetch tasks');
-      return res.json();
+      const json = await res.json()
+      if(!Array.isArray(json)) throw new Error('Response is not array');
+      // Keep only valid tasks(task is valid if all its data and all of its items data is valid)
+      let tasks = json
+        .map(task => TaskSchema.safeParse(task).data)
+        .filter(task => task != undefined)
+      // Normalize sort order - whatever order number tasks and task items have, we normalize them by assigning their index+1 to their sortOrder
+      // No sorting is needed since they are always fetched in order
+      tasks = normalizeTaskSortOrder(tasks)
+      return tasks
     }
   });
 

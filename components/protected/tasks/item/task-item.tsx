@@ -19,7 +19,6 @@ export default function TaskItem(p: TaskItemProps) {
 
   return (
     <div className="flex flex-col bg-white p-2">
-      <p>{p.data.id}</p>
       <div className="flex items-center gap-2">
         <CircleCheck color={completeColor} size={30} className="mr-2 cursor-pointer" onClick={p.onComplete}/>
         <AutosizeTextarea placeholder="Enter content" register={form.register(`items.${p.index}.content`)}  />
