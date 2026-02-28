@@ -1,6 +1,7 @@
 'use client';
 
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
+import Skeleton from "@/components/common/Skeleton/skeleton";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
 import Task from "@/components/protected/tasks/task";
@@ -10,6 +11,15 @@ import { useUserContext } from "@/components/protected/user/userContext/UserCont
 import { CopyPlus } from "lucide-react";
 import { useEffect } from "react";
 
+const Loading = () => {
+  return(
+    <div className="flex flex-col gap-4">
+      <Skeleton/>
+      <Skeleton/>
+      <Skeleton/>
+    </div>
+  )
+}
 
 export default function TasksPage() {
   //const taskData = mockTasks
@@ -17,7 +27,7 @@ export default function TasksPage() {
   const taskService = useTasksApi(userId)
   
   if (taskService.get.isLoading)
-    return <div>Loading tasks...</div>;
+    return <Loading/>;
   
   const tasks = taskService.get.data || [];
 

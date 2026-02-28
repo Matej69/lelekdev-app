@@ -2,7 +2,6 @@ import { queryClient } from '@/components/common/queryClient/queryClient';
 import { nullIfTrackingIdElseKeep } from '@/components/common/utils';
 import { TaskItemModel, TaskItemSchema } from '@/components/protected/tasks/item/model';
 import { TaskModel, TaskSchema } from '@/components/protected/tasks/model';
-import { normalizeTaskSortOrder } from '@/components/protected/tasks/utils';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { isArray } from 'util';
 
@@ -26,7 +25,7 @@ export const useTasksApi = (ownerId: string) => {
         .filter(task => task != undefined)
       // Normalize sort order - whatever order number tasks and task items have, we normalize them by assigning their index+1 to their sortOrder
       // No sorting is needed since they are always fetched in order
-      tasks = normalizeTaskSortOrder(tasks)
+      // tasks = normalizeTaskSortOrder(tasks)
       return tasks
     }
   });
@@ -35,7 +34,7 @@ export const useTasksApi = (ownerId: string) => {
     mutationFn: async (body: TaskModel) => {
       const sanitizedBody = { 
         ...body,
-        id: nullIfTrackingIdElseKeep(body.id), 
+        id: nullIfTrackingIdElseKeep(body.id),
         items: body.items.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
         const res = await fetch(`http://localhost:8080/tasks`, {
@@ -58,18 +57,15 @@ export const useTasksApi = (ownerId: string) => {
         ...body, 
         items: body.items.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
-      console.log(body)
-      console.log("UPDATE")
-      console.log(sanitizedBody)
-        const res = await fetch(`http://localhost:8080/tasks?ownerId=${ownerId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(sanitizedBody),
-            credentials: 'include',
-        });
-        if (!res.ok) throw new Error('Failed to update tasks');
+      const res = await fetch(`http://localhost:8080/tasks?ownerId=${ownerId}`, {
+          method: 'PUT',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(sanitizedBody),
+          credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to update tasks');
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['tasks', ownerId] }) }
   });

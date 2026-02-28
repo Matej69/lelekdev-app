@@ -15,8 +15,8 @@ export const TaskFormProvider = (p: TaskFormProviderProps) => {
        });
 
     useEffect(() => {
-        form.reset(p.defaultValues)
-    }, [p.defaultValues])
+  form.reset(p.defaultValues)
+}, [p.defaultValues.id, p.defaultValues.title, p.defaultValues.items])
 
     return <FormProvider {...form}>{ p.children}</FormProvider>
 }

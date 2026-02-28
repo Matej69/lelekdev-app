@@ -9,12 +9,15 @@ import { taskColors } from "./constants"
 
 // Has to be outside of useTask hook since it is called outside of TaskFormProvider
 export const createTask = (userId: string, tasks: TaskModel[], mutateFun: (taskToCreate: TaskModel) => void ) => {
+    const nextFreeSortOrder = tasks.length == 0 ? 1 : Math.max(...tasks.map(t => t.sortOrder)) + 1
+    console.log(tasks.map(t => t.sortOrder))
+    console.log(nextFreeSortOrder)
     const newTask: TaskModel = {
       id: generateTrackingId(),
       ownerId: userId,
       title: "[NEW]",
       color: taskColors.beige,
-      sortOrder: tasks.length + 1,
+      sortOrder: nextFreeSortOrder,
       items: [],
     }
     mutateFun(newTask)
@@ -29,7 +32,6 @@ export const useTasks = () => {
         name: "items",
     });
     const items = form.watch('items');
-    const taskColor = form.watch('color')
 
     const deleteTask = () => taskService.deleteTask.mutate(form.getValues().id);
 

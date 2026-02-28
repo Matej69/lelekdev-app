@@ -13,7 +13,6 @@ import { get } from "http";
 import { generateTrackingId } from "@/components/common/utils";
 import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
-import { normalizeTaskItemsSortOrder } from "./utils";
 import { useTasks } from "./useTasks";
 import { taskColors } from "./constants";
 
