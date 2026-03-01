@@ -8,6 +8,7 @@ import Task from "@/components/protected/tasks/task";
 import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
 import { createTask } from "@/components/protected/tasks/useTasks";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { CopyPlus } from "lucide-react";
 import { useEffect } from "react";
 

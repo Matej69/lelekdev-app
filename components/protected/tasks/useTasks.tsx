@@ -6,6 +6,7 @@ import { useFieldArray, useFormContext } from "react-hook-form"
 import { TaskItemModel } from "./item/model"
 import { normalizeTaskItemsSortOrder } from "./utils"
 import { taskColors } from "./constants"
+import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 
 // Has to be outside of useTask hook since it is called outside of TaskFormProvider
 export const createTask = (userId: string, tasks: TaskModel[], mutateFun: (taskToCreate: TaskModel) => void ) => {
@@ -66,6 +67,18 @@ export const useTasks = () => {
       form.setValue("color", color, { shouldDirty: true })
     }
 
+    const moveTaskItem = (result: DropResult<string>, provided: ResponderProvided): void => {
+      if(!result.destination) return;
+      const droppedOnDifferentPlace = result.source.index !== result.destination?.index 
+      if(!droppedOnDifferentPlace) return;
+      const newItems = [...form.getValues().items]
+      const itemToMove = newItems[result.source.index]
+      newItems.splice(result.source.index, 1) // Removes from source index
+      newItems.splice(result.destination.index, 0, itemToMove) // Adds to destination index
+      const normalizedItems = normalizeTaskItemsSortOrder(newItems) // Reassigns task order to be same as index
+      form.setValue('items', normalizedItems, {shouldDirty: true})
+    }
+
     return {
       form,
       createTask,
@@ -74,6 +87,7 @@ export const useTasks = () => {
       createTaskItem,
       deleteTaskItem,
       completeTaskItem,
-      changeColorTaskItem
+      changeColorTaskItem,
+      moveTaskItem
     }
 }

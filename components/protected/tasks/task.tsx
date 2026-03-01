@@ -15,6 +15,9 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "./useTasks";
 import { taskColors } from "./constants";
+import { DragDropContext } from "@hello-pangea/dnd";
+import { TaskItemDroppable } from "../../common/drag-drop/TaskItemDroppable";
+import { TaskItemDraggable } from "../../common/drag-drop/TaskItemDraggable";
 
 
 interface TaskProps {
@@ -49,16 +52,18 @@ export default function Task(p: TaskProps) {
               <Trash2 className="cursor-pointer" onClick={taskActions.deleteTask} />
           </div>
         </div>
-        {/* Task items */}        
-        {
-          items.map((item, i) => {
-            return <TaskItem
-              key={item.id}
-              data={item}
-              index={i}
-            />
-          })
-        }
+        {/* Task items */}       
+        <DragDropContext onDragEnd={taskActions.moveTaskItem}>
+          <TaskItemDroppable droppableId={`task-item-droppable-${form.getValues().id}`} items={items}>
+          {
+            items.map((item, i) => { return (
+                <TaskItemDraggable index={i} item={item} key={`task-item-draggable-${item.id}`}>
+                  <TaskItem key={item.id} data={item} index={i}/>
+                </TaskItemDraggable>
+            )})
+          }
+          </TaskItemDroppable>
+        </DragDropContext>
       </div>
     );
 }
