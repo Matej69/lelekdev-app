@@ -11,8 +11,6 @@ import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 // Has to be outside of useTask hook since it is called outside of TaskFormProvider
 export const createTask = (userId: string, tasks: TaskModel[], mutateFun: (taskToCreate: TaskModel) => void ) => {
     const nextFreeSortOrder = tasks.length == 0 ? 1 : Math.max(...tasks.map(t => t.sortOrder)) + 1
-    console.log(tasks.map(t => t.sortOrder))
-    console.log(nextFreeSortOrder)
     const newTask: TaskModel = {
       id: generateTrackingId(),
       ownerId: userId,
