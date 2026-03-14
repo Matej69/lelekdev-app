@@ -27,7 +27,8 @@ export const createRecipe = (
     sortOrder: nextFreeSortOrder,
     sections: [],
   }
-  mutateFun(newRecipe, () => {
+  mutateFun(newRecipe, (createdRecipe) => {
+    newRecipe.id = createdRecipe.id
     recipes.push(newRecipe)
     form.setValue('recipes', recipes);
   })
@@ -38,7 +39,7 @@ export const useRecipes = () => {
     const recipeService = useRecipesApi(userId)
     const form = useFormContext<{recipes: RecipeModel[]}>()
 
-    const deleteTask = (index: number) => {
+    const deleteRecipe = (index: number) => {
       const recipes = form.getValues().recipes
       const recipeToDelete = recipes[index]
       const newRecipes = recipes.filter(r => r.id != recipeToDelete.id) 
@@ -51,12 +52,17 @@ export const useRecipes = () => {
       form.setValue(`recipes.${index}.color`, color, { shouldDirty: true })
     }
 
+    const updateRecipe = (index: number) => {
+      const recipeToUpdate = form.getValues(`recipes`)[index]
+      recipeService.updateRecipe.mutate(recipeToUpdate)
+    }
+
     return {
       form,
       changeRecipeColor,
-      deleteTask,
-      /*updateTask,
-      createTaskItem,
+      deleteRecipe,
+      updateRecipe,
+      /*createTaskItem,
       deleteTaskItem,
       completeTaskItem,
       moveTaskItem*/

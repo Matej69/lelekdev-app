@@ -65,14 +65,14 @@ export const useRecipesApi = (ownerId: string) => {
 
   const createRecipe = (body: RecipeModel, onSuccess: (data: RecipeModel) => void) => createRecipeMutation.mutate(body, { onSuccess })
 
-  /*
-  const update = useMutation({
+  
+  const updateRecipe = useMutation({
     mutationFn: async (body: RecipeModel) => {
-      const sanitizedBody = { 
+      const sanitizedBody: RecipeModel = { 
         ...body, 
-        items: body.items.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
+        sections: [] //body.sections.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
-      const res = await fetch(`http://localhost:8080/recipes?ownerId=${ownerId}`, {
+      const res = await fetch(`http://localhost:8080/recipes`, {
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json',
@@ -82,9 +82,9 @@ export const useRecipesApi = (ownerId: string) => {
       });
       if (!res.ok) throw new Error('Failed to update recipes');
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes', ownerId] }) }
+    //onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes', ownerId] }) }
   });
-*/
+
 
   const deleteRecipe = useMutation({
       mutationFn: async (recipeId: string) => {
@@ -103,7 +103,7 @@ export const useRecipesApi = (ownerId: string) => {
 
   return {
     get,
-    //update,
+    updateRecipe,
     createRecipe,
     deleteRecipe
   };

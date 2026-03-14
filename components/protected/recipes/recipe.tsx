@@ -38,7 +38,8 @@ export default function Recipe(p: RecipeProps) {
   const errorMessages = form.formState.errors.recipes?.[p.index]
 
   const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.index, color)
-  const onRecipeDelete = () => recipesActions.deleteTask(p.index)
+  const onRecipeDelete = () => recipesActions.deleteRecipe(p.index)
+  const onRecipeUpdate = () => { recipesActions.updateRecipe(p.index) }
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
@@ -48,7 +49,7 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
-              <input {...form.register(`recipes.${p.index}.name`)} value={name ?? ''} placeholder="Recipe name..."></input>
+              <input {...form.register(`recipes.${p.index}.name`)} placeholder="Recipe name..."></input>
               { errorMessages?.name?.message &&  <p className="text-red-500 pl-1">{errorMessages?.name?.message}</p>}
              </div>
           </div>
@@ -58,7 +59,7 @@ export default function Recipe(p: RecipeProps) {
                 <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorSelect}/>
             </Popover>
               { /* <CopyPlus className="cursor-pointer" onClick={recipesActions.createRecipe} /> */}
-              { /* <Save className="cursor-pointer" onClick={taskActions.updateTask} color={form.formState.isDirty ? "black" : "gray"}/> */}
+              <Save className="cursor-pointer" onClick={onRecipeUpdate} color={form.formState.isDirty ? "black" : "gray"}/>
               <Trash2 className="cursor-pointer" onClick={onRecipeDelete} />
           </div>
         </div>
