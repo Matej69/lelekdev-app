@@ -1,7 +1,7 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "../tasks/model"
-import { generateTrackingId } from "@/components/common/utils"
+import { generateTrackingId, maxPlus1Or1 } from "@/components/common/utils"
 import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
@@ -10,6 +10,8 @@ import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 import { useRecipesApi } from "@/api/protected/recipes/useRecipesApi"
 import { RecipeModel, RecipeSchema } from "./recipe-model"
 import { useQuery } from "@tanstack/react-query"
+import { RecipeSectionModel } from "./sections/recipe-section-schema"
+import { RecipeSectionType } from "./sections/type"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -54,7 +56,32 @@ export const useRecipes = () => {
 
     const updateRecipe = (index: number) => {
       const recipeToUpdate = form.getValues(`recipes`)[index]
-      recipeService.updateRecipe.mutate(recipeToUpdate)
+      if(form.formState.isDirty)
+            form.handleSubmit((data) => recipeService.updateRecipe.mutate(recipeToUpdate))()
+    }
+
+    const createRecipeSection = (recipeIndex: number) => {
+      const recipe = form.getValues(`recipes`)[recipeIndex]
+      const newSection: RecipeSectionModel = {
+        id: generateTrackingId(),
+        recipeId: recipe.id,
+        type: 'TEXT',
+        title: '',
+        content: '',
+        sortOrder: maxPlus1Or1(recipe.sections, (s) => s.sortOrder)
+      }
+      recipe.sections.push(newSection)
+      form.setValue(`recipes.${recipeIndex}`, recipe, { shouldDirty: true })
+    }
+
+    const deleteRecipeSection = (recipeIndex: number, sectionIndex: number) => {
+      const newSections = [...form.getValues('recipes')[recipeIndex].sections]
+      newSections.splice(sectionIndex, 1)
+      form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+    }
+
+    const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, type: RecipeSectionType) => {
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.type`, type, { shouldDirty: true })
     }
 
     return {
@@ -62,8 +89,10 @@ export const useRecipes = () => {
       changeRecipeColor,
       deleteRecipe,
       updateRecipe,
-      /*createTaskItem,
-      deleteTaskItem,
+      createRecipeSection,
+      deleteRecipeSection,
+      changeRecipeSectionType
+      /*
       completeTaskItem,
       moveTaskItem*/
     }

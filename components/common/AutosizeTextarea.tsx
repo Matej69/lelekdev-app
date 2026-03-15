@@ -25,7 +25,7 @@ export default function AutosizeTextarea({ placeholder, register }: AutosizeText
     <>
       <textarea
         {...register}
-        className="w-full p-2 rounded focus:outline-none border-2 border-transparent focus:border-gray-300 resize-none overflow-hidden"
+        className="w-full px-[0.2rem] py-[0.1rem] rounded focus:outline-none border-2 border-transparent focus:border-gray-300 resize-none overflow-hidden"
         rows={1}
         placeholder={placeholder}
         ref={(el) => {  // assign ref to both react-hook-form and local ref, without it registers internal ref would be overridden

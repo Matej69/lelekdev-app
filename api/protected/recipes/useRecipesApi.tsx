@@ -23,8 +23,13 @@ export const useRecipesApi = (ownerId: string) => {
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
-        
-          onSuccess(result)
+        console.log(json
+          .map(recipe => RecipeSchema.safeParse(recipe))
+          .filter(r => !r.success)
+          .map(r => r.error.issues)
+        )
+      
+        onSuccess(result)
         return result
       },
   })
@@ -64,17 +69,16 @@ export const useRecipesApi = (ownerId: string) => {
   });
 
   const createRecipe = (body: RecipeModel, onSuccess: (data: RecipeModel) => void) => createRecipeMutation.mutate(body, { onSuccess })
-
   
   const updateRecipe = useMutation({
     mutationFn: async (body: RecipeModel) => {
-      const sanitizedBody: RecipeModel = { 
+      const sanitizedBody = { 
         ...body, 
-        sections: [] //body.sections.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
+        sections: body.sections.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
       const res = await fetch(`http://localhost:8080/recipes`, {
           method: 'PUT',
-          headers: {
+          headers: { 
               'Content-Type': 'application/json',
           },
           body: JSON.stringify(sanitizedBody),

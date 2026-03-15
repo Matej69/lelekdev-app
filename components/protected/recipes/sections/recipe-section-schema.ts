@@ -7,4 +7,4 @@ export const RecipeSectionSchema = z.discriminatedUnion("type", [
   RecipeIngredientSectionModelSchema,
 ])
 
-export type RecipeSection = z.infer<typeof RecipeSectionSchema>
+export type RecipeSectionModel = z.infer<typeof RecipeSectionSchema>

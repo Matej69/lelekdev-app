@@ -8,3 +8,8 @@ export const generateTrackingId = () => {
 export const nullIfTrackingIdElseKeep = (id: string) => {
   return (id.startsWith('[new]')) ? null : id;
 }
+
+export const maxPlus1Or1 = <TItem,> (collection: TItem[], extractor: (el: TItem) => number) => {
+  if(collection.length == 0) return 1
+  return Math.max(...collection.map(r => extractor(r))) + 1
+}

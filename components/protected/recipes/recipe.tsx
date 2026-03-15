@@ -20,6 +20,7 @@ import { TaskItemDroppable } from "../../common/drag-drop/TaskItemDroppable";
 import { TaskItemDraggable } from "../../common/drag-drop/TaskItemDraggable";
 import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
+import RecipeSectionItem from "./sections/section-item";
 
 
 interface RecipeProps {
@@ -40,6 +41,7 @@ export default function Recipe(p: RecipeProps) {
   const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.index, color)
   const onRecipeDelete = () => recipesActions.deleteRecipe(p.index)
   const onRecipeUpdate = () => { recipesActions.updateRecipe(p.index) }
+  const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.index) }
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
@@ -58,15 +60,17 @@ export default function Recipe(p: RecipeProps) {
             <Popover trigger={<Paintbrush className="cursor-pointer"/>}>
                 <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorSelect}/>
             </Popover>
-              { /* <CopyPlus className="cursor-pointer" onClick={recipesActions.createRecipe} /> */}
+              { <CopyPlus className="cursor-pointer" onClick={onRecipeCreateSection} /> }
               <Save className="cursor-pointer" onClick={onRecipeUpdate} color={form.formState.isDirty ? "black" : "gray"}/>
               <Trash2 className="cursor-pointer" onClick={onRecipeDelete} />
           </div>
         </div>
+        {/* Recipe sections */}     
           {
-            JSON.stringify(sections)
-          }
-        {/* Task items */}     
+            sections.map((section, i) => { return (
+              <RecipeSectionItem key={section.id} index={i} type={section.type} recipeIndex={p.index} />
+            )})
+          }  
         {
           /*
             <DragDropContext onDragEnd={taskActions.moveTaskItem}>
@@ -80,7 +84,7 @@ export default function Recipe(p: RecipeProps) {
               }
               </TaskItemDroppable>
             </DragDropContext>
-          */
+            */
         }  
       </div>
     );

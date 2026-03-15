@@ -5,6 +5,22 @@
   --foreground: #171717;
 }
 
+input {
+  width: 100%;
+  padding: 0.15rem;
+  padding-left: 0.15rem;
+  padding-right: 0.15rem;
+  border-radius: 0.2rem;
+  border: 2px solid transparent;
+  resize: none;
+  overflow: hidden;
+}
+
+input:focus {
+  outline: none;
+  border-color: #d1d5db; /* gray-300 */
+}
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
