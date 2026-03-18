@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import SignOutButton from "./sign-out-button";
 
 interface HeaderProps {
@@ -10,11 +11,13 @@ export default function Header({ email, role }: HeaderProps) {
         <div className="flex items-center justify-between w-full h-16">
             { /* Search Bar */ }
             <div className="relative max-w-sm h-full grow">
-                <span className="absolute flex items-center h-full left-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+                <span className="absolute flex items-center h-full left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <Search />
+                </span>
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full h-full pl-10 pr-4 py-2 bg-white border focus:outline-none focus:shadow-[4px_4px_0px_black]"
+                  className="w-full h-full pl-12! pr-4 py-2 bg-white border focus:outline-none focus:shadow-[4px_4px_0px_black]"
                 />
             </div>
             <div className="flex items-center h-full gap-4">

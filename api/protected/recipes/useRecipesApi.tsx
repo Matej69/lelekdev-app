@@ -20,6 +20,7 @@ export const useRecipesApi = (ownerId: string) => {
         const json = await res.json()
         if (!Array.isArray(json)) throw new Error('Response is not array')
 
+        // TODO: This is problem, if recipe has one ingredient not passing validation whole recipe won't show.
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
@@ -72,10 +73,11 @@ export const useRecipesApi = (ownerId: string) => {
   
   const updateRecipe = useMutation({
     mutationFn: async (body: RecipeModel) => {
-      const sanitizedBody = { 
+      const bodyWithoutTrackingIds = { 
         ...body, 
         sections: body.sections.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
       }
+      const sanitizedBody = RecipeSchema.parse(bodyWithoutTrackingIds)
       const res = await fetch(`http://localhost:8080/recipes`, {
           method: 'PUT',
           headers: { 
@@ -86,7 +88,6 @@ export const useRecipesApi = (ownerId: string) => {
       });
       if (!res.ok) throw new Error('Failed to update recipes');
     },
-    //onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes', ownerId] }) }
   });
 
 
@@ -101,7 +102,6 @@ export const useRecipesApi = (ownerId: string) => {
           });
           if (!res.ok) throw new Error('Failed to delete recipes');
       },
-      //onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes', ownerId] }) }
     });
 
 

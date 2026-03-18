@@ -12,6 +12,9 @@ import { RecipeModel, RecipeSchema } from "./recipe-model"
 import { useQuery } from "@tanstack/react-query"
 import { RecipeSectionModel } from "./sections/recipe-section-schema"
 import { RecipeSectionType } from "./sections/type"
+import { IngredientModel } from "./sections/ingredient/ingredient-model"
+import { RecipeIngredientSectionModel } from "./sections/ingredient/recipe-ingredient-section-model"
+import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -80,8 +83,30 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
     }
 
-    const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, type: RecipeSectionType) => {
-      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.type`, type, { shouldDirty: true })
+    const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, newType: RecipeSectionType) => {
+      const section = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}`)
+      if(newType == 'INGREDIENTS') {
+        (section as RecipeIngredientSectionModel).ingredients = []
+      }
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.type`, newType, { shouldDirty: true })
+    }
+
+    const toogleSectionLinkEdit = (recipeIndex: number, sectionIndex: number) => {
+      const value = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.linkedAmountUpdate`)
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.linkedAmountUpdate`, !value)
+    }
+
+    const changeIngredientAmount = (recipeIndex: number, sectionIndex: number, ingredientIndex: number, oldAmount: number, newAmount: number, linkedAmountUpdate: boolean) => {
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex}.amount`, newAmount, { shouldDirty: true })
+      // Change all other ingredients by same ratio, skip one that initiated amount change
+      if(!linkedAmountUpdate || oldAmount == 0 || newAmount == 0) return;
+      const changeAmountRatio = newAmount / oldAmount
+      const newIngredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+      newIngredients.forEach((ingredient, i) => {
+        if(i != ingredientIndex)
+          ingredient.amount = Number((ingredient.amount * changeAmountRatio).toFixed(3))
+      })
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
     return {
@@ -91,7 +116,9 @@ export const useRecipes = () => {
       updateRecipe,
       createRecipeSection,
       deleteRecipeSection,
-      changeRecipeSectionType
+      changeRecipeSectionType,
+      toogleSectionLinkEdit,
+      changeIngredientAmount,
       /*
       completeTaskItem,
       moveTaskItem*/

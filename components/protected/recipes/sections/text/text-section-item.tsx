@@ -1,6 +1,6 @@
 import { CircleCheck, Plus, Trash2 } from "lucide-react";
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
-import { useFormContext, useWatch } from "react-hook-form";
+import { FieldError, FieldErrorsImpl, Merge, useFormContext, useWatch } from "react-hook-form";
 import { RecipeModel } from "../../recipe-model";
 import { useRecipes } from "../../useRecipes";
 import { RecipeSectionModel } from "../recipe-section-schema";
@@ -16,12 +16,8 @@ interface TextSectionItemProps {
 export default function TextSectionItem(p: TextSectionItemProps) {
   const form = useFormContext<{recipes: RecipeModel[]}>()
   
-  const errors = form.formState.errors.recipes?.[p.recipeIndex]?.sections?.[p.index]
+  const errors = form.formState.errors.recipes?.[p.recipeIndex]?.sections?.[p.index] as Merge<FieldError, FieldErrorsImpl<NonNullable<RecipeTextSectionModel>>>
   const recipesActions = useRecipes()
-  const section = useWatch({
-    control: form.control,
-    name: `recipes.${p.recipeIndex}.sections.${p.index}`
-  });
 
   const onSectionDelete = () => { recipesActions.deleteRecipeSection(p.recipeIndex, p.index) }
   const onChangeRecipeSectionType = (type: RecipeSectionType) => { recipesActions.changeRecipeSectionType(p.recipeIndex, p.index, type) }
@@ -40,9 +36,6 @@ export default function TextSectionItem(p: TextSectionItemProps) {
           <SectionTypeSwitch defaultType="TEXT" onChange={onChangeRecipeSectionType}></SectionTypeSwitch>
           <Trash2 size={26} className=" cursor-pointer" onClick={onSectionDelete} />
         </div>
-        
-        
-
         { /* Content */ }
         <div className="flex flex-col items-start gap-2">
           <AutosizeTextarea placeholder="Enter content" register={form.register(`recipes.${p.recipeIndex}.sections.${p.index}.content`)} />

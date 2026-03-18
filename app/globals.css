@@ -15,6 +15,17 @@ input {
   resize: none;
   overflow: hidden;
 }
+/* Hide number input arrows in Chrome, Edge, Safari */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide number input arrows in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
 
 input:focus {
   outline: none;
