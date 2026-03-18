@@ -2,7 +2,7 @@
 
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
 import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Paintbrush, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { TaskModel, TaskSchema } from "./model";
 import { TaskItemModel } from "./item/model";
 import TaskItem from "./item/task-item";
@@ -16,8 +16,9 @@ import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "./useTasks";
 import { taskColors } from "./constants";
 import { DragDropContext } from "@hello-pangea/dnd";
-import { TaskItemDroppable } from "../../common/drag-drop/TaskItemDroppable";
-import { TaskItemDraggable } from "../../common/drag-drop/TaskItemDraggable";
+import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
+import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
+import { DragDropHandlerContext } from "@/app/DragDropProvider";
 
 
 interface TaskProps {
@@ -29,6 +30,16 @@ export default function Task(p: TaskProps) {
   const form = useFormContext<TaskModel>()
   const taskColor = form.watch('color')
   const items = form.watch('items');
+
+  // TODO: THIS SHOULDN'T BE DONE HERE PER TASK BUT ONE LEVEL HIGHER(PER APP)
+  // WELL ONE LEVEL HIGHER IS NOT WRAPPED IN FORM WHICH IS USED IN 'useTasks' SO YEA....
+  // FIX THIS BY NOT TaskFormProvider inside TaskArray component - one extra comp. solves this hell
+  // For now it will register handler for each task with 'moveTaskItem' that will use proper form per task
+  const dragDropContext = useContext(DragDropHandlerContext)
+  useEffect(() => {
+    dragDropContext.registerHandler(`task-item-${form.getValues().id}`, taskActions.moveTaskItem)
+  }, [])
+
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
@@ -52,18 +63,17 @@ export default function Task(p: TaskProps) {
               <Trash2 className="cursor-pointer" onClick={taskActions.deleteTask} />
           </div>
         </div>
-        {/* Task items */}       
-        <DragDropContext onDragEnd={taskActions.moveTaskItem}>
-          <TaskItemDroppable droppableId={`task-item-droppable-${form.getValues().id}`} items={items}>
-          {
-            items.map((item, i) => { return (
-                <TaskItemDraggable index={i} item={item} key={`task-item-draggable-${item.id}`}>
-                  <TaskItem key={item.id} data={item} index={i}/>
-                </TaskItemDraggable>
-            )})
-          }
-          </TaskItemDroppable>
-        </DragDropContext>
+        {/* Task items */}
+        {/* When we merge allf orms for tasks to single form, then type='task-item', right now each task list is independent droppable area */}    
+        <DragDropDroppable droppableId={`${form.getValues().id}`} type={`task-item-${form.getValues().id}`} items={items}>
+        {
+          items.map((item, i) => { return (
+              <DragDropDraggable index={i} draggableId={item.id} key={`${item.id}`}>
+                <TaskItem key={item.id} data={item} index={i}/>
+              </DragDropDraggable>
+          )})
+        }
+        </DragDropDroppable>
       </div>
     );
 }

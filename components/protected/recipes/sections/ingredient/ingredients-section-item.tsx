@@ -35,13 +35,6 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
   const onChangeSectionLinkEdit = () => {
     recipesActions.toogleSectionLinkEdit(p.recipeIndex, p.index)
   }
-  const onChangeIngredientAmount = (e: React.ChangeEvent<HTMLInputElement>, ingredientIndex: number) => { 
-    const oldAmount = form.getValues(`recipes.${p.recipeIndex}.sections.${p.index}.ingredients.${ingredientIndex}`)?.amount
-    const newAmount = +e.target.value
-    if (!isNaN(oldAmount) && !isNaN(newAmount)) {
-      recipesActions.changeIngredientAmount(p.recipeIndex, p.index, ingredientIndex, oldAmount, newAmount, section.linkedAmountUpdate)
-    }
-  }
   
   return (
      <div className="flex flex-col bg-white p-2 gap-1">

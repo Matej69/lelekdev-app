@@ -172,3 +172,33 @@ function RestaurantsFieldArray({
     </div>
   )
 }
+
+
+
+
+
+const DnDContext = createContext<{
+  registerHandler: (type: string, handler: (result: DropResult) => void) => void;
+}>({ registerHandler: () => {} });
+
+export const DnDProvider = ({ children }: { children: ReactNode }) => {
+  const [handlers, setHandlers] = useState<Record<string, (result: DropResult) => void>>({});
+
+  const registerHandler = (type: string, handler: (result: DropResult) => void) => {
+    setHandlers((prev) => ({ ...prev, [type]: handler }));
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const handler = handlers[result.type];
+    handler?.(result);
+  };
+
+  return (
+    <DnDContext.Provider value={{ registerHandler }}>
+      <DragDropContext onDragEnd={onDragEnd}>
+        {children}
+      </DragDropContext>
+    </DnDContext.Provider>
+  );
+};

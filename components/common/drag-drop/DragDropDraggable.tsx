@@ -1,14 +1,14 @@
 import { Draggable } from "@hello-pangea/dnd"
 
-interface TaskItemDraggableProps<TItem> {
+interface DragDropDraggableProps<TItem> {
     index: number,
-    item: TItem,
-    children: React.ReactNode
+    children: React.ReactNode,
+    draggableId: string
 }
 
-export const TaskItemDraggable = <TItem extends {id: string},>(p: TaskItemDraggableProps<TItem>) => {
+export const DragDropDraggable = <TItem extends {id: string},>(p: DragDropDraggableProps<TItem>) => {
     return(
-        <Draggable index={p.index} draggableId={p.item.id}>
+        <Draggable index={p.index} draggableId={p.draggableId}>
           {(draggable) => (
             <div
               ref={draggable.innerRef} 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
+import { DragDropHandlerContext } from "@/app/DragDropProvider";
 import Skeleton from "@/components/common/Skeleton/skeleton";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
@@ -10,7 +11,7 @@ import { createTask } from "@/components/protected/tasks/useTasks";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { CopyPlus } from "lucide-react";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 
 const Loading = () => {
   return(

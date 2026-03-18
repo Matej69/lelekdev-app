@@ -65,14 +65,24 @@ export const useTasks = () => {
       form.setValue("color", color, { shouldDirty: true })
     }
 
-    const moveTaskItem = (result: DropResult<string>, provided: ResponderProvided): void => {
+    /**
+     * Not only logical action but is also adapted to visual task moving, therefore it requires DragDrop library specific result stuff 
+     * TODO: Refactor when we start using one form that holds all tasks, not form per task
+     */
+    const moveTaskItem = (result: DropResult<string>): void => {
       if(!result.destination) return;
-      const droppedOnDifferentPlace = result.source.index !== result.destination?.index 
-      if(!droppedOnDifferentPlace) return;
+      if(result.source.droppableId !== result.destination.droppableId) return; // Makes sure that, for now, you can only move items inside same task - since we have diff. form for each task
+      const droppedOnSamePlace =
+      result.source.droppableId == result.destination.droppableId && 
+      result.source.index == result.destination?.index 
+      if(droppedOnSamePlace) return;
+      console.log(result)
+      console.log(...form.getValues().items)
       const newItems = [...form.getValues().items]
       const itemToMove = newItems[result.source.index]
       newItems.splice(result.source.index, 1) // Removes from source index
       newItems.splice(result.destination.index, 0, itemToMove) // Adds to destination index
+      console.log(newItems)
       const normalizedItems = normalizeTaskItemsSortOrder(newItems) // Reassigns task order to be same as index
       form.setValue('items', normalizedItems, {shouldDirty: true})
     }
