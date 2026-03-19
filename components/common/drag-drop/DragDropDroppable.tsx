@@ -3,7 +3,6 @@ import { Droppable } from "@hello-pangea/dnd"
 interface DragDropDroppableProps<TItems> {
     droppableId: string,
     type: string,
-    items: TItems[],
     children: React.ReactNode,
 }
 

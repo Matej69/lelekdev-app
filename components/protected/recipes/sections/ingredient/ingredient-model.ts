@@ -7,7 +7,7 @@ export const IngredientModelSchema = z.object({
     unit: z.string().nonempty("Unit can not be empty"),
     kcal: z.number().default(0),
     sortOrder: z.number().min(1),
-    recipeSectionId: z.string()
+    recipeSectionId: z.string().nullable()
 })
 
 export type IngredientModel = z.infer<typeof IngredientModelSchema>

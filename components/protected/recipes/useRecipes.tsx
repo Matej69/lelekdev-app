@@ -15,6 +15,7 @@ import { RecipeSectionType } from "./sections/type"
 import { IngredientModel } from "./sections/ingredient/ingredient-model"
 import { RecipeIngredientSectionModel } from "./sections/ingredient/recipe-ingredient-section-model"
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
+import { normalizeRecipeSortOrder } from "./utils"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -59,8 +60,14 @@ export const useRecipes = () => {
 
     const updateRecipe = (index: number) => {
       const recipeToUpdate = form.getValues(`recipes`)[index]
-      if(form.formState.isDirty)
-            form.handleSubmit((data) => recipeService.updateRecipe.mutate(recipeToUpdate))()
+      if(form.formState.isDirty) {
+        console.log("recipeToUpdate - dirty")
+        console.log(recipeToUpdate)
+        form.handleSubmit((data) => recipeService.updateRecipe.mutate(recipeToUpdate), (errors) => {
+    // errors object from react-hook-form
+    console.log('Form validation errors:', errors)
+  })()
+      }
     }
 
     const createRecipeSection = (recipeIndex: number) => {
@@ -109,6 +116,33 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
+    const moveRecipeSection = (result: DropResult<string>): void => {
+      if(!result.destination) return;
+      const droppedOnSamePlace =
+      result.source.droppableId == result.destination.droppableId && 
+      result.source.index == result.destination?.index 
+      if(droppedOnSamePlace) return;
+      // Find section that is moving
+      const recipes = [...form.getValues('recipes')]
+      const sourceRecipe = recipes.find(r => r.id === result.source.droppableId)
+      const destinationRecipe = recipes.find(r => r.id === result.destination?.droppableId)
+      const sectionToMove = sourceRecipe?.sections.find(s => s.id === result.draggableId)
+      if(!sourceRecipe || !destinationRecipe || !sectionToMove) return;
+      const freshSectionToMove: RecipeSectionModel = {
+        ...sectionToMove, 
+        id: generateTrackingId(), 
+        recipeId: destinationRecipe?.id, 
+        ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
+      }
+      sourceRecipe?.sections.splice(result.source.index, 1) // Removes from source index
+      destinationRecipe?.sections.splice(result.destination.index, 0, freshSectionToMove) // Adds to destination index
+      // Add to destination
+      console.log(freshSectionToMove)
+      const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
+      form.setValue('recipes', normalizedItems, {shouldDirty: true})
+      
+    }
+
     return {
       form,
       changeRecipeColor,
@@ -119,8 +153,6 @@ export const useRecipes = () => {
       changeRecipeSectionType,
       toogleSectionLinkEdit,
       changeIngredientAmount,
-      /*
-      completeTaskItem,
-      moveTaskItem*/
+      moveRecipeSection
     }
 }

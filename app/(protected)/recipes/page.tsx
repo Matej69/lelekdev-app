@@ -49,8 +49,7 @@ export default function RecipesPage() {
         <h1 className="text-5xl font-bold grow">Recipes</h1>
         <CopyPlus size={48} className="ml-4 cursor-pointer" onClick={onCreateRecipe} />
       </div>
-      {/* Task list */}
-      <p>{ JSON.stringify(Object.values(recipes)) }</p>
+      {/* Recipe list */}
       <RecipeFormProvider form={form}>
         {
           recipes.recipes?.map((recipe, i) =>

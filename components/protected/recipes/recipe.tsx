@@ -2,7 +2,7 @@
 
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
 import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Paintbrush, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { TaskModel, TaskSchema } from "../tasks/model";
 import { TaskItemModel } from "../tasks/item/model";
 import TaskItem from "../tasks/item/task-item";
@@ -21,6 +21,7 @@ import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
 import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
+import { DragDropHandlerContext } from "@/app/DragDropProvider";
 
 
 interface RecipeProps {
@@ -30,13 +31,16 @@ interface RecipeProps {
 export default function Recipe(p: RecipeProps) {
   const recipesActions = useRecipes()
   const form = useFormContext<{recipes: RecipeModel[]}>()
-
-  const [name, color, sections] = useWatch({
+  const [id, name, color, sections] = useWatch({
     control: form.control,
-    name: [`recipes.${p.index}.name`, `recipes.${p.index}.color`, `recipes.${p.index}.sections`], // array of paths
+    name: [`recipes.${p.index}.id`, `recipes.${p.index}.name`, `recipes.${p.index}.color`, `recipes.${p.index}.sections`], // array of paths
   });
-
   const errorMessages = form.formState.errors.recipes?.[p.index]
+
+  const dragDropContext = useContext(DragDropHandlerContext)
+  useEffect(() => {
+    dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
+  }, [])
 
   const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.index, color)
   const onRecipeDelete = () => recipesActions.deleteRecipe(p.index)
@@ -65,27 +69,16 @@ export default function Recipe(p: RecipeProps) {
               <Trash2 className="cursor-pointer" onClick={onRecipeDelete} />
           </div>
         </div>
-        {/* Recipe sections */}     
+        {/* Recipe sections */}    
+        <DragDropDroppable droppableId={`${id}`} type={`recipe-section`}>
           {
             sections.map((section, i) => { return (
-              <RecipeSectionItem key={section.id} index={i} type={section.type} recipeIndex={p.index} />
+              <DragDropDraggable index={i} draggableId={section.id} key={`${section.id}`}>
+                <RecipeSectionItem key={section.id} index={i} type={section.type} recipeIndex={p.index} />
+              </DragDropDraggable>
             )})
           }  
-        {
-          /*
-            <DragDropContext onDragEnd={taskActions.moveTaskItem}>
-              <TaskItemDroppable droppableId={`task-item-droppable-${form.getValues().id}`} items={items}>
-              {
-                items.map((item, i) => { return (
-                    <TaskItemDraggable index={i} item={item} key={`task-item-draggable-${item.id}`}>
-                      <TaskItem key={item.id} data={item} index={i}/>
-                    </TaskItemDraggable>
-                )})
-              }
-              </TaskItemDroppable>
-            </DragDropContext>
-            */
-        }  
+        </DragDropDroppable>  
       </div>
     );
 }

@@ -65,7 +65,7 @@ export default function Task(p: TaskProps) {
         </div>
         {/* Task items */}
         {/* When we merge allf orms for tasks to single form, then type='task-item', right now each task list is independent droppable area */}    
-        <DragDropDroppable droppableId={`${form.getValues().id}`} type={`task-item-${form.getValues().id}`} items={items}>
+        <DragDropDroppable droppableId={`${form.getValues().id}`} type={`task-item-${form.getValues().id}`}>
         {
           items.map((item, i) => { return (
               <DragDropDraggable index={i} draggableId={item.id} key={`${item.id}`}>

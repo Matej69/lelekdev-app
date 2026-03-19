@@ -75,15 +75,23 @@ export const useRecipesApi = (ownerId: string) => {
     mutationFn: async (body: RecipeModel) => {
       const bodyWithoutTrackingIds = { 
         ...body, 
-        sections: body.sections.map(item => ({...item, id: nullIfTrackingIdElseKeep(item.id)})) 
+        sections: body.sections.map(section => ({
+          ...section, 
+          id: nullIfTrackingIdElseKeep(section.id),
+          ingredients: section.ingredients?.map(ingredient => ({
+            ...ingredient, 
+            id: nullIfTrackingIdElseKeep(ingredient.id),
+          })) 
+        })) 
       }
-      const sanitizedBody = RecipeSchema.parse(bodyWithoutTrackingIds)
+      console.log(bodyWithoutTrackingIds)
+      //const sanitizedBody = RecipeSchema.parse(bodyWithoutTrackingIds)
       const res = await fetch(`http://localhost:8080/recipes`, {
           method: 'PUT',
           headers: { 
               'Content-Type': 'application/json',
           },
-          body: JSON.stringify(sanitizedBody),
+          body: JSON.stringify(bodyWithoutTrackingIds),
           credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to update recipes');
