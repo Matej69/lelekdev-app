@@ -19,6 +19,6 @@ export default function RecipeSectionItem(p: RecipeSectionItemProps) {
     case "TEXT":
       return <TextSectionItem index={p.index} recipeIndex={p.recipeIndex}/>
     case "INGREDIENTS":
-      return <IngredientsSectionItem index={p.index} recipeIndex={p.recipeIndex}/>
+      return <IngredientsSectionItem ingredientIndex={p.index} recipeIndex={p.recipeIndex}/>
   }
 }

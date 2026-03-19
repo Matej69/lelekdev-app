@@ -15,7 +15,7 @@ import { RecipeSectionType } from "./sections/type"
 import { IngredientModel } from "./sections/ingredient/ingredient-model"
 import { RecipeIngredientSectionModel } from "./sections/ingredient/recipe-ingredient-section-model"
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
-import { normalizeRecipeSortOrder } from "./utils"
+import { normalizeIngredientsSortOrder, normalizeRecipeSortOrder } from "./utils"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -140,8 +140,31 @@ export const useRecipes = () => {
       console.log(freshSectionToMove)
       const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
       form.setValue('recipes', normalizedItems, {shouldDirty: true})
-      
     }
+
+  const createIngredient = (recipeIndex: number, sectionIndex: number) => {
+    let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+    const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
+    ingredients.push({
+      id: generateTrackingId(),
+      name: '',
+      amount: 0,
+      unit: '',
+      kcal: 0,
+      sortOrder: 999,
+      recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
+    })
+    ingredients = normalizeIngredientsSortOrder(ingredients)
+    form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+  }
+
+  const deleteIngredient = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => {
+    let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+    ingredients.splice(ingredientIndex, 1)
+    ingredients = normalizeIngredientsSortOrder(ingredients)
+    form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+  }
+
 
     return {
       form,
@@ -152,7 +175,9 @@ export const useRecipes = () => {
       deleteRecipeSection,
       changeRecipeSectionType,
       toogleSectionLinkEdit,
-      changeIngredientAmount,
-      moveRecipeSection
+      moveRecipeSection,
+      createIngredient,
+      deleteIngredient,
+      changeIngredientAmount
     }
 }

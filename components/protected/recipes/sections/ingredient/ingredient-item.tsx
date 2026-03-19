@@ -36,12 +36,13 @@ export default function IngredientItem(p: IngredientItemProps) {
       recipesActions.changeIngredientAmount(p.recipeIndex, p.sectionIndex, ingredientIndex, oldAmount, newAmount, section.linkedAmountUpdate)
     }
   }
+  const onDeleteIngredient = () => recipesActions.deleteIngredient(p.recipeIndex, p.sectionIndex, p.ingredientIndex)
   
   const ingredientsError = (form.formState.errors.recipes?.[p.recipeIndex]?.sections?.[p.sectionIndex] as Merge<FieldError, FieldErrorsImpl<NonNullable<RecipeIngredientSectionModel>>>)?.ingredients?.[p.ingredientIndex]
   
-  return <div>
+  return <div className="w-full">
     <div className="flex w-full">
-      <div className="">
+      <div>
         <input 
           key={form.watch(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // For rerendering since we use 'defaultValue' 
           type="number" inputMode="numeric" className="field-sizing-content" placeholder="Amount"
@@ -54,6 +55,9 @@ export default function IngredientItem(p: IngredientItemProps) {
       </div>
       <div className="grow">
         <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.name`)} placeholder="Name"/>
+      </div>
+      <div className="">
+        <Trash2 size={26} className="cursor-pointer" onClick={onDeleteIngredient}/>
       </div>
     </div>
         { ingredientsError?.amount?.message && <p className="pl-1 text-red-500 px-1 bold">{ingredientsError.amount.message}</p>}
