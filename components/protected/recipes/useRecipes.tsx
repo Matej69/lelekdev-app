@@ -13,9 +13,9 @@ import { useQuery } from "@tanstack/react-query"
 import { RecipeSectionModel } from "./sections/recipe-section-schema"
 import { RecipeSectionType } from "./sections/type"
 import { IngredientModel } from "./sections/ingredient/ingredient-model"
-import { RecipeIngredientSectionModel } from "./sections/ingredient/recipe-ingredient-section-model"
+import { RecipeIngredientSectionModel, RecipeIngredientSectionModelSchema } from "./sections/ingredient/recipe-ingredient-section-model"
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
-import { normalizeIngredientsSortOrder, normalizeRecipeSortOrder } from "./utils"
+import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -24,18 +24,17 @@ export const createRecipe = (
   mutateFun: (body: RecipeModel, onSuccess: (data: RecipeModel) => void
 ) => void) => {
   const recipes = form.getValues().recipes
-  const nextFreeSortOrder = recipes.length == 0 ? 1 : Math.max(...recipes.map(r => r.sortOrder)) + 1
   const newRecipe: RecipeModel = {
     id: generateTrackingId(),
     ownerId: userId,
-    name: "[NEW]",
+    name: "new",
     color: taskColors.beige,
-    sortOrder: nextFreeSortOrder,
+    sortOrder: 1,
     sections: [],
   }
   mutateFun(newRecipe, (createdRecipe) => {
     newRecipe.id = createdRecipe.id
-    recipes.push(newRecipe)
+    recipes.splice(0, 0, newRecipe)
     form.setValue('recipes', recipes);
   })
 }
@@ -151,10 +150,9 @@ export const useRecipes = () => {
       amount: 0,
       unit: '',
       kcal: 0,
-      sortOrder: 999,
+      sortOrder: maxPlus1Or1(ingredients, (ing) => ing.sortOrder),
       recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
     })
-    ingredients = normalizeIngredientsSortOrder(ingredients)
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
   }
 
@@ -163,6 +161,20 @@ export const useRecipes = () => {
     ingredients.splice(ingredientIndex, 1)
     ingredients = normalizeIngredientsSortOrder(ingredients)
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+  }
+
+  const duplicateRecipeSection = (recipeIndex: number, sectionIndex: number) => {
+    let newSections = [...form.getValues(`recipes.${recipeIndex}.sections`)]
+    const newSection = structuredClone(newSections[sectionIndex])
+    newSection.id = generateTrackingId()
+    if(newSection.type == 'INGREDIENTS') {
+      newSection.ingredients.forEach(ingredient => {
+        ingredient.id = generateTrackingId()
+        ingredient.recipeSectionId = null
+    })}
+    newSections.splice(sectionIndex, 0, newSection)
+    newSections = normalizeRecipeSectionsSortOrder(newSections)
+    form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
   }
 
 
@@ -178,6 +190,7 @@ export const useRecipes = () => {
       moveRecipeSection,
       createIngredient,
       deleteIngredient,
-      changeIngredientAmount
+      changeIngredientAmount,
+      duplicateRecipeSection
     }
 }

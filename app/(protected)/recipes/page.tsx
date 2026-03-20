@@ -53,7 +53,7 @@ export default function RecipesPage() {
       <RecipeFormProvider form={form}>
         {
           recipes.recipes?.map((recipe, i) =>
-            <Recipe key={`${recipe.id}`} index={i}></Recipe>
+            <Recipe key={`${recipe.id}-${i}`} index={i}></Recipe>
           )
         }
       </RecipeFormProvider>

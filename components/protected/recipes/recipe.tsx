@@ -72,9 +72,9 @@ export default function Recipe(p: RecipeProps) {
         {/* Recipe sections */}    
         <DragDropDroppable droppableId={`${id}`} type={`recipe-section`}>
           {
-            sections.map((section, i) => { return (
-              <DragDropDraggable index={i} draggableId={section.id} key={`${section.id}`}>
-                <RecipeSectionItem key={section.id} index={i} type={section.type} recipeIndex={p.index} />
+            sections.map((section, sectionIndex) => { return (
+              <DragDropDraggable index={sectionIndex} draggableId={section.id} key={`${section.id}`}>
+                <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.index} />
               </DragDropDraggable>
             )})
           }  

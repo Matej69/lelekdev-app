@@ -78,11 +78,13 @@ export const useRecipesApi = (ownerId: string) => {
         sections: body.sections.map(section => ({
           ...section, 
           id: nullIfTrackingIdElseKeep(section.id),
-          ingredients: section.ingredients?.map(ingredient => ({
-            ...ingredient, 
-            id: nullIfTrackingIdElseKeep(ingredient.id),
-          })) 
-        })) 
+          ...(section.type === 'INGREDIENTS' && {
+            ingredients: section.ingredients?.map(ingredient => ({
+              ...ingredient, 
+              id: nullIfTrackingIdElseKeep(ingredient.id)
+            }))
+          })  
+        }))
       }
       console.log(bodyWithoutTrackingIds)
       //const sanitizedBody = RecipeSchema.parse(bodyWithoutTrackingIds)
