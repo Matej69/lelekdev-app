@@ -44,12 +44,14 @@ export const useRecipes = () => {
     const recipeService = useRecipesApi(userId)
     const form = useFormContext<{recipes: RecipeModel[]}>()
 
-    const deleteRecipe = (index: number) => {
+    const deleteRecipe = async (index: number) => {
       const recipes = form.getValues().recipes
       const recipeToDelete = recipes[index]
-      const newRecipes = recipes.filter(r => r.id != recipeToDelete.id) 
       recipeService.deleteRecipe.mutate(recipeToDelete.id, {
-        onSuccess: () => form.setValue('recipes', newRecipes)
+        onSuccess: () => {
+          const newRecipes = recipes.filter(r => r.id != recipeToDelete.id) 
+          form.setValue('recipes', newRecipes)
+        }
       })
     };
 
@@ -61,7 +63,8 @@ export const useRecipes = () => {
       const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
       const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
       if (!isFormValid) return;
-      recipeService.updateRecipe.mutate(recipeToUpdate)
+      const res = await recipeService.updateRecipe.mutateAsync(recipeToUpdate)
+      if(!res) return;
       form.resetField(`recipes.${recipeIndex}`, {
         keepDirty: false,
         defaultValue: form.getValues(`recipes.${recipeIndex}`),

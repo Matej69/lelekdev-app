@@ -76,7 +76,6 @@ export const useRecipesApi = (ownerId: string) => {
           })  
         }))
       }
-      console.log(bodyWithoutTrackingIds)
       const res = await api.put(`/recipes`, bodyWithoutTrackingIds);
       return res.data;
     },
