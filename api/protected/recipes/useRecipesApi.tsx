@@ -1,3 +1,4 @@
+import { api } from '@/api/api';
 import { queryClient } from '@/components/common/queryClient/queryClient';
 import { nullIfTrackingIdElseKeep } from '@/components/common/utils';
 import { RecipeModel, RecipeSchema } from '@/components/protected/recipes/recipe-model';
@@ -11,13 +12,10 @@ export const useRecipesApi = (ownerId: string) => {
     useQuery<RecipeModel[], Error>({
       queryKey: ['recipes', ownerId],
       queryFn: async () => {
-        const res = await fetch(`http://localhost:8080/recipes?ownerId=${ownerId}`, {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+        const res = await api.get(`/recipes?ownerId=${ownerId}`, {
+          headers: { 'Content-Type': 'application/json' }
         })
-        if (!res.ok) throw new Error('Failed to fetch recipes')
-
-        const json = await res.json()
+        const json = res.data;
         if (!Array.isArray(json)) throw new Error('Response is not array')
 
         // TODO: This is problem, if recipe has one ingredient not passing validation whole recipe won't show.
@@ -56,16 +54,8 @@ export const useRecipesApi = (ownerId: string) => {
             : undefined
         })) 
       }
-      const res = await fetch(`http://localhost:8080/recipes`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(sanitizedBody),
-          credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to create recipes');
-      return res.json();
+      const res = await api.post("/recipes", sanitizedBody);
+      return res.data;
     }
   });
 
@@ -87,31 +77,16 @@ export const useRecipesApi = (ownerId: string) => {
         }))
       }
       console.log(bodyWithoutTrackingIds)
-      //const sanitizedBody = RecipeSchema.parse(bodyWithoutTrackingIds)
-      const res = await fetch(`http://localhost:8080/recipes`, {
-          method: 'PUT',
-          headers: { 
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bodyWithoutTrackingIds),
-          credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to update recipes');
-      return res.ok
+      const res = await api.put(`/recipes`, bodyWithoutTrackingIds);
+      return res.data;
     },
   });
 
 
   const deleteRecipe = useMutation({
       mutationFn: async (recipeId: string) => {
-          const res = await fetch(`http://localhost:8080/recipes/${recipeId}`, {
-              method: 'DELETE',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-          });
-          if (!res.ok) throw new Error('Failed to delete recipes');
+        const res = await api.delete(`/recipes/${recipeId}`);
+        return res.data;
       },
     });
 
