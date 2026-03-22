@@ -39,7 +39,7 @@ export default function TasksPage() {
     <div className="flex flex-col h-full font-sans gap-6">
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Tasks</h1>
-        <CopyPlus size={48} className="ml-4 cursor-pointer" onClick={onCreate} />
+        <CopyPlus size={48} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={onCreate} />
       </div>
       {/* Task list */}
       {

@@ -2,7 +2,7 @@
 
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
 import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Paintbrush, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { CSSProperties, useContext, useEffect, useState } from "react";
 import { TaskModel, TaskSchema } from "./model";
 import { TaskItemModel } from "./item/model";
 import TaskItem from "./item/task-item";
@@ -40,9 +40,13 @@ export default function Task(p: TaskProps) {
     dragDropContext.registerHandler(`task-item-${form.getValues().id}`, taskActions.moveTaskItem)
   }, [])
 
+  const recipeDirtyFields = form.formState.dirtyFields
+  const isAnyFieldDirty = recipeDirtyFields ? Object.keys(recipeDirtyFields).length > 0 : false;
+  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
+
 
     return (
-      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
+      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
         {/* Header */}
         <div className="flex justify-center p-2" style={{ background: taskColor }}>
           {/* Title */}

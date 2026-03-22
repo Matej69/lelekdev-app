@@ -2,7 +2,7 @@
 
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
 import { Check, CircleCheck, CopyPlus, Delete, DeleteIcon, Dot, Paintbrush, Plus, Save, SquareCheck, Trash, Trash2 } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { CSSProperties, useContext, useEffect, useState } from "react";
 import { TaskModel, TaskSchema } from "../tasks/model";
 import { TaskItemModel } from "../tasks/item/model";
 import TaskItem from "../tasks/item/task-item";
@@ -25,7 +25,7 @@ import { DragDropHandlerContext } from "@/app/DragDropProvider";
 
 
 interface RecipeProps {
-    index: number
+    recipeIndex: number
 }
 
 export default function Recipe(p: RecipeProps) {
@@ -33,29 +33,39 @@ export default function Recipe(p: RecipeProps) {
   const form = useFormContext<{recipes: RecipeModel[]}>()
   const [id, name, color, sections] = useWatch({
     control: form.control,
-    name: [`recipes.${p.index}.id`, `recipes.${p.index}.name`, `recipes.${p.index}.color`, `recipes.${p.index}.sections`], // array of paths
+    name: [
+      `recipes.${p.recipeIndex}.id`, 
+      `recipes.${p.recipeIndex}.name`, 
+      `recipes.${p.recipeIndex}.color`, 
+      `recipes.${p.recipeIndex}.sections`
+    ],
   });
-  const errorMessages = form.formState.errors.recipes?.[p.index]
+  const errorMessages = form.formState.errors.recipes?.[p.recipeIndex]
 
+  const recipeDirtyFields = form.formState.dirtyFields.recipes?.[p.recipeIndex]
+  const isAnyFieldDirty = recipeDirtyFields ? Object.keys(recipeDirtyFields).length > 0 : false;
+    
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
   }, [])
 
-  const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.index, color)
-  const onRecipeDelete = () => recipesActions.deleteRecipe(p.index)
-  const onRecipeUpdate = () => { recipesActions.updateRecipe(p.index) }
-  const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.index) }
+  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
+
+  const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.recipeIndex, color)
+  const onRecipeDelete = () => recipesActions.deleteRecipe(p.recipeIndex)
+  const onRecipeUpdate = () => { isAnyFieldDirty && recipesActions.updateRecipe(p.recipeIndex);}
+  const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.recipeIndex) }
 
     return (
-      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 shadow-[4px_4px_0_black]">
+      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
         {/* Header */}
         <div className="flex justify-center p-2" style={{ background: color }}>
           {/* Title */}
           <div className="flex grow">
              <Dot />
              <div>
-              <input {...form.register(`recipes.${p.index}.name`)} placeholder="Recipe name..."></input>
+              <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
               { errorMessages?.name?.message &&  <p className="text-red-500 pl-1">{errorMessages?.name?.message}</p>}
              </div>
           </div>
@@ -65,7 +75,7 @@ export default function Recipe(p: RecipeProps) {
                 <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorSelect}/>
             </Popover>
               { <CopyPlus className="cursor-pointer" onClick={onRecipeCreateSection} /> }
-              <Save className="cursor-pointer" onClick={onRecipeUpdate} color={form.formState.isDirty ? "black" : "gray"}/>
+              <Save className="cursor-pointer" onClick={onRecipeUpdate} color={isAnyFieldDirty ? "black" : "gray"}/>
               <Trash2 className="cursor-pointer" onClick={onRecipeDelete} />
           </div>
         </div>
@@ -74,7 +84,7 @@ export default function Recipe(p: RecipeProps) {
           {
             sections.map((section, sectionIndex) => { return (
               <DragDropDraggable index={sectionIndex} draggableId={section.id} key={`${section.id}`}>
-                <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.index} />
+                <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
               </DragDropDraggable>
             )})
           }  

@@ -57,16 +57,15 @@ export const useRecipes = () => {
       form.setValue(`recipes.${index}.color`, color, { shouldDirty: true })
     }
 
-    const updateRecipe = (index: number) => {
-      const recipeToUpdate = form.getValues(`recipes`)[index]
-      if(form.formState.isDirty) {
-        console.log("recipeToUpdate - dirty")
-        console.log(recipeToUpdate)
-        form.handleSubmit((data) => recipeService.updateRecipe.mutate(recipeToUpdate), (errors) => {
-    // errors object from react-hook-form
-    console.log('Form validation errors:', errors)
-  })()
-      }
+    const updateRecipe = async (recipeIndex: number) => {
+      const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
+      const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
+      if (!isFormValid) return;
+      recipeService.updateRecipe.mutate(recipeToUpdate)
+      form.resetField(`recipes.${recipeIndex}`, {
+        keepDirty: false,
+        defaultValue: form.getValues(`recipes.${recipeIndex}`),
+      });
     }
 
     const createRecipeSection = (recipeIndex: number) => {

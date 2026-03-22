@@ -97,6 +97,7 @@ export const useRecipesApi = (ownerId: string) => {
           credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to update recipes');
+      return res.ok
     },
   });
 

@@ -44,16 +44,16 @@ export default function RecipesPage() {
   const onCreateRecipe = () => { createRecipe(form, userId, recipesApi.createRecipe) }
 
   return (
-    <div className="flex flex-col h-full font-sans gap-6">
+    <div className="flex flex-col h-full font-sans gap-4">
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Recipes</h1>
-        <CopyPlus size={48} className="ml-4 cursor-pointer" onClick={onCreateRecipe} />
+        <CopyPlus size={52} className="border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={onCreateRecipe} />
       </div>
       {/* Recipe list */}
       <RecipeFormProvider form={form}>
         {
           recipes.recipes?.map((recipe, i) =>
-            <Recipe key={`${recipe.id}-${i}`} index={i}></Recipe>
+            <Recipe key={`${recipe.id}-${i}`} recipeIndex={i}></Recipe>
           )
         }
       </RecipeFormProvider>
