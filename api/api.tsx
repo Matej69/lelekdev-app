@@ -1,18 +1,20 @@
 // api.ts
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
 });
 
 let isRefreshing = false;
+let isRedirecting = false;
+
 let failedQueue: {
-  resolve: (value?: any) => void;
-  reject: (error?: any) => void;
+  resolve: (value?: unknown) => void;
+  reject: (error?: unknown) => void;
 }[] = [];
 
-const processQueue = (error?: any) => {
+const processQueue = (error?: unknown) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) reject(error);
     else resolve(undefined);
@@ -20,13 +22,14 @@ const processQueue = (error?: any) => {
   failedQueue = [];
 };
 
-// Response interceptor for 401 → refresh → retry
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+    if (error.response?.status === 401 && !originalRequest?._retry) {
+      // If refresh already in progress → queue requests
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -37,17 +40,25 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Use **global axios** for refresh to avoid infinite interceptor loop
+        // IMPORTANT: use plain axios (not api) to avoid infinite loop
         await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/auth/refresh`,
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
 
         processQueue();
+
+        // retry original request
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
+        // 🔥 redirect to sign-in on refresh error
+        if (typeof window !== "undefined" && !isRedirecting) {
+          isRedirecting = true;
+          window.location.href = "/sign-in";
+        }
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

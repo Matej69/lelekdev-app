@@ -17,8 +17,6 @@ export const useRecipesApi = (ownerId: string) => {
         })
         const json = res.data;
         if (!Array.isArray(json)) throw new Error('Response is not array')
-
-        // TODO: This is problem, if recipe has one ingredient not passing validation whole recipe won't show.
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
