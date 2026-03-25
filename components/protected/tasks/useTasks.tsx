@@ -6,7 +6,6 @@ import { useFieldArray, useFormContext } from "react-hook-form"
 import { TaskItemModel } from "./item/model"
 import { normalizeTaskItemsSortOrder } from "./utils"
 import { taskColors } from "./constants"
-import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 
 // Has to be outside of useTask hook since it is called outside of TaskFormProvider
 export const createTask = (userId: string, tasks: TaskModel[], mutateFun: (taskToCreate: TaskModel) => void ) => {

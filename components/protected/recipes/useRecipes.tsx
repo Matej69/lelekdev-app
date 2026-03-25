@@ -6,7 +6,6 @@ import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
 import { taskColors } from "../tasks/constants"
-import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 import { useRecipesApi } from "@/api/protected/recipes/useRecipesApi"
 import { RecipeModel, RecipeSchema } from "./recipe-model"
 import { useQuery } from "@tanstack/react-query"
@@ -16,6 +15,7 @@ import { IngredientModel } from "./sections/ingredient/ingredient-model"
 import { RecipeIngredientSectionModel, RecipeIngredientSectionModelSchema } from "./sections/ingredient/recipe-ingredient-section-model"
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
 import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
+import { DragDropResult } from "@/components/common/drag-drop/DragDropResult"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -117,17 +117,16 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
-    const moveRecipeSection = (result: DropResult<string>): void => {
-      if(!result.destination) return;
+    const moveRecipeSection = (result: DragDropResult): void => {
       const droppedOnSamePlace =
-      result.source.droppableId == result.destination.droppableId && 
-      result.source.index == result.destination?.index 
+        result.initial.containerId == result.target.containerId && 
+        result.initial.itemIndex == result.target.itemIndex
       if(droppedOnSamePlace) return;
       // Find section that is moving
       const recipes = [...form.getValues('recipes')]
-      const sourceRecipe = recipes.find(r => r.id === result.source.droppableId)
-      const destinationRecipe = recipes.find(r => r.id === result.destination?.droppableId)
-      const sectionToMove = sourceRecipe?.sections.find(s => s.id === result.draggableId)
+      const sourceRecipe = recipes.find(r => r.id === result.initial.containerId)
+      const destinationRecipe = recipes.find(r => r.id === result.target.containerId)
+      const sectionToMove = sourceRecipe?.sections.find(s => s.id === result.dragged.id)
       if(!sourceRecipe || !destinationRecipe || !sectionToMove) return;
       const freshSectionToMove: RecipeSectionModel = {
         ...sectionToMove, 
@@ -135,8 +134,8 @@ export const useRecipes = () => {
         recipeId: destinationRecipe?.id, 
         ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
       }
-      sourceRecipe?.sections.splice(result.source.index, 1) // Removes from source index
-      destinationRecipe?.sections.splice(result.destination.index, 0, freshSectionToMove) // Adds to destination index
+      sourceRecipe?.sections.splice(result.initial.itemIndex, 1) // Removes from source index
+      destinationRecipe?.sections.splice(result.target.itemIndex, 0, freshSectionToMove) // Adds to destination index
       // Add to destination
       console.log(freshSectionToMove)
       const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index

@@ -1,22 +1,25 @@
-import { Draggable } from "@hello-pangea/dnd"
-
-interface DragDropDraggableProps<TItem> {
+import {useDraggable} from '@dnd-kit/react';
+import {useSortable} from '@dnd-kit/react/sortable';
+interface DragDropDraggableProps {
+    id: string,
+    groupId: string,
     index: number,
+    type: string,
     children: React.ReactNode,
-    draggableId: string
 }
 
-export const DragDropDraggable = <TItem extends {id: string},>(p: DragDropDraggableProps<TItem>) => {
+export const DragDropDraggable = (p: DragDropDraggableProps) => {
+    const {ref} = useSortable({
+        id: p.id,
+        group: p.groupId,
+        index: p.index,
+        type: p.type
+    });
+
     return(
-        <Draggable index={p.index} draggableId={p.draggableId}>
-          {(draggable) => (
-            <div
-              ref={draggable.innerRef} 
-              {...draggable.draggableProps}
-              {...draggable.dragHandleProps}>
-            { p.children }
-            </div>
-          )}
-        </Draggable>
+        <div ref={ref}>
+            <p>{p.id}</p>
+          { p.children }
+        </div>
     )
 }

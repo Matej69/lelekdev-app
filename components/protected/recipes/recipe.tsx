@@ -15,13 +15,12 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "../tasks/useTasks";
 import { taskColors } from "../tasks/constants";
-import { DragDropContext } from "@hello-pangea/dnd";
 import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
 import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
 import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
-import { DragDropHandlerContext } from "@/app/DragDropProvider";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 
 
 interface RecipeProps {
@@ -80,10 +79,10 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable droppableId={`${id}`} type={`recipe-section`}>
+        <DragDropDroppable id={`${id}`} type="recipe-section-container" acceptTypes={["recipe-section"]}>
           {
             sections.map((section, sectionIndex) => { return (
-              <DragDropDraggable index={sectionIndex} draggableId={section.id} key={`${section.id}`}>
+              <DragDropDraggable id={section.id} groupId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
                 <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
               </DragDropDraggable>
             )})

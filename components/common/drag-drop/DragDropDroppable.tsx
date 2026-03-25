@@ -1,20 +1,23 @@
-import { Droppable } from "@hello-pangea/dnd"
+import { useDroppable } from "@dnd-kit/react";
 
 interface DragDropDroppableProps<TItems> {
-    droppableId: string,
+    id: string,
     type: string,
+    acceptTypes: string[],
     children: React.ReactNode,
 }
 
 export const DragDropDroppable = <TItems,>(p: DragDropDroppableProps<TItems>) => {
+    const {ref, isDropTarget} = useDroppable({
+        id: p.id,
+        type: p.type,
+        accept: p.acceptTypes
+    });
+
     return(
-        <Droppable droppableId={p.droppableId} type={p.type}>
-            {(droppable) => (
-              <div ref={droppable.innerRef} {...droppable.droppableProps}>
-                { p.children }
-                {droppable.placeholder}
-              </div>
-            )}
-          </Droppable>
+        <div ref={ref}>
+            <p>{p.id}</p>
+            { p.children }
+        </div>
     )
 }

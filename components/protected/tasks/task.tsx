@@ -15,10 +15,9 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "./useTasks";
 import { taskColors } from "./constants";
-import { DragDropContext } from "@hello-pangea/dnd";
 import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
 import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
-import { DragDropHandlerContext } from "@/app/DragDropProvider";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 
 
 interface TaskProps {
@@ -69,10 +68,10 @@ export default function Task(p: TaskProps) {
         </div>
         {/* Task items */}
         {/* When we merge allf orms for tasks to single form, then type='task-item', right now each task list is independent droppable area */}    
-        <DragDropDroppable droppableId={`${form.getValues().id}`} type={`task-item-${form.getValues().id}`}>
+        <DragDropDroppable id={`${form.getValues().id}`} type={`task-item-${form.getValues().id}`}>
         {
           items.map((item, i) => { return (
-              <DragDropDraggable index={i} draggableId={item.id} key={`${item.id}`}>
+              <DragDropDraggable index={i} id={item.id} key={`${item.id}`}>
                 <TaskItem key={item.id} data={item} index={i}/>
               </DragDropDraggable>
           )})
