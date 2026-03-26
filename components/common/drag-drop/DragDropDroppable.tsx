@@ -1,23 +1,21 @@
-import { useDroppable } from "@dnd-kit/react";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 interface DragDropDroppableProps<TItems> {
     id: string,
     type: string,
     acceptTypes: string[],
+    items: any[],
     children: React.ReactNode,
 }
 
 export const DragDropDroppable = <TItems,>(p: DragDropDroppableProps<TItems>) => {
-    const {ref, isDropTarget} = useDroppable({
-        id: p.id,
-        type: p.type,
-        accept: p.acceptTypes
-    });
 
     return(
-        <div ref={ref}>
+        <div>
             <p>{p.id}</p>
-            { p.children }
+            <SortableContext items={p.items.map(el => el.id)} strategy={verticalListSortingStrategy}>
+                { p.children }
+            </SortableContext>
         </div>
     )
 }

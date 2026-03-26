@@ -1,23 +1,32 @@
-import {useDraggable} from '@dnd-kit/react';
-import {useSortable} from '@dnd-kit/react/sortable';
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 interface DragDropDraggableProps {
     id: string,
-    groupId: string,
+    containerId: string,
     index: number,
     type: string,
     children: React.ReactNode,
+    item: any
 }
 
 export const DragDropDraggable = (p: DragDropDraggableProps) => {
-    const {ref} = useSortable({
+    const { setNodeRef, attributes, listeners, transform, transition } = useSortable({
         id: p.id,
-        group: p.groupId,
-        index: p.index,
-        type: p.type
+        data: {
+            item: p.item,
+            type: p.type,
+            containerId: p.containerId
+        },
     });
 
+    const style = {
+        transition,
+        transform: CSS.Transform.toString(transform)
+    }
+
     return(
-        <div ref={ref}>
+        <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
             <p>{p.id}</p>
           { p.children }
         </div>

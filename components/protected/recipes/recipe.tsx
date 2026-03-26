@@ -47,6 +47,7 @@ export default function Recipe(p: RecipeProps) {
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
+    dragDropContext.registerSwapHandler(`recipe-section`, recipesActions.swapSameRecipeSection)
   }, [])
 
   const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
@@ -79,10 +80,10 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable id={`${id}`} type="recipe-section-container" acceptTypes={["recipe-section"]}>
+        <DragDropDroppable id={`${id}`} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]}>
           {
             sections.map((section, sectionIndex) => { return (
-              <DragDropDraggable id={section.id} groupId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
+              <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
                 <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
               </DragDropDraggable>
             )})

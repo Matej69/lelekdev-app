@@ -15,7 +15,7 @@ export type DragDropResult = {
 }
 
 export const dragDropEventToResult = (event: any):  DragDropResult | null => {
-    if(!event?.operation?.source?.sortable && event.operation?.source && event.operation?.target)
+    if(!event?.operation?.source?.sortable || !event.operation?.source || !event.operation?.target)
         return null;
     const { id, initialGroup, initialIndex, group: targetGroup, index: targetIndex } = event.operation.source.sortable
     const type = event.operation.source.type

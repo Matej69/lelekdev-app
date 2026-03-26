@@ -16,6 +16,8 @@ import { RecipeIngredientSectionModel, RecipeIngredientSectionModelSchema } from
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
 import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
 import { DragDropResult } from "@/components/common/drag-drop/DragDropResult"
+import { Active, Over } from "@dnd-kit/core"
+import { arrayMove } from "@dnd-kit/sortable"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -117,6 +119,20 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
+    const swapSameRecipeSection = (containerId: string, activeIndex: number, overIndex: number) => {
+      console.log(containerId)
+      console.log(activeIndex)
+      console.log(overIndex)
+      const recipe = {...form.getValues(`recipes`).find(r => r.id == containerId)}
+      const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == containerId)
+      if(recipe.sections) {
+        let newSections = arrayMove(recipe.sections, activeIndex, overIndex)
+        newSections = normalizeRecipeSectionsSortOrder(newSections)
+        form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      }
+
+    }
+
     const moveRecipeSection = (result: DragDropResult): void => {
       const droppedOnSamePlace =
         result.initial.containerId == result.target.containerId && 
@@ -188,6 +204,7 @@ export const useRecipes = () => {
       deleteRecipeSection,
       changeRecipeSectionType,
       toogleSectionLinkEdit,
+      swapSameRecipeSection,
       moveRecipeSection,
       createIngredient,
       deleteIngredient,
