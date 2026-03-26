@@ -47,7 +47,7 @@ export default function Recipe(p: RecipeProps) {
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
-    dragDropContext.registerSwapHandler(`recipe-section`, recipesActions.swapSameRecipeSection)
+    dragDropContext.registerSwapHandler(`recipe-section`, recipesActions.swapRecipeSection)
   }, [])
 
   const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
@@ -58,7 +58,7 @@ export default function Recipe(p: RecipeProps) {
   const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.recipeIndex) }
 
     return (
-      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
+      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300 bg-white" style={containerShadowStyle}>
         {/* Header */}
         <div className="flex justify-center p-2" style={{ background: color }}>
           {/* Title */}

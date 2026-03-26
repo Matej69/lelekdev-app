@@ -3,7 +3,7 @@
 import { useTasks } from '@/components/protected/tasks/useTasks';
 import { createContext, ReactNode, useRef, useState } from 'react';
 import { dragDropEventToResult, DragDropResult } from './DragDropResult';
-import { closestCorners, DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
+import { closestCorners, DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
 
 
@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
  */
 export const DragDropHandlerContext = createContext<{
   registerHandler: (type: string, handler: (result: DragDropResult) => void) => void,
-  registerSwapHandler: (type: string, handler: (containerId: string, activeIndex: number, overIndex: number) => void) => void
+  registerSwapHandler: (type: string, handler: (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => void) => void
 }>({ 
     registerHandler: () => {},
     registerSwapHandler: () => {} 
@@ -24,14 +24,18 @@ export const DragDropHandlerContext = createContext<{
 
 export function DragDropProvider({ children }: { children: ReactNode })  {
     const onDragEndHandlers = useRef<{ [type: string]: (result: DragDropResult) => void }>({})
-    const onDragEndSwapHandlers = useRef<{ [type: string]: (containerId: string, activeIndex: number, overIndex: number) => void }>({})
+    const onSwapSectionHandlers = useRef<{ [type: string]: (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => void }>({})
     const [activeItem, setActiveItem] = useState(null)
+
+    const sensors = useSensors(useSensor(
+        PointerSensor, { activationConstraint: { distance: 3 } }
+    ))
 
     const registerHandler = (type: string, handler: (result: DragDropResult) => void) => {
         onDragEndHandlers.current[type] = handler
     }
-    const registerSwapHandler = (type: string, handler: (containerId: string, activeIndex: number, overIndex: number) => void) => {
-        onDragEndSwapHandlers.current[type] = handler
+    const registerSwapHandler = (type: string, handler: (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => void) => {
+        onSwapSectionHandlers.current[type] = handler
     }
 
     const onDragStart = (event: DragStartEvent) => {
@@ -58,25 +62,34 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
         const overType = over.data.current?.type
         const activeContainer = active.data.current?.containerId
         const overContainer = over.data.current?.containerId
-        console.log(activeIndex)
-        console.log(overIndex)
         if(activeContainer == overContainer && activeType == overType && activeIndex != null && overIndex != null)
-            onDragEndSwapHandlers.current[activeType]?.(activeContainer, activeIndex, overIndex)
+            onSwapSectionHandlers.current[activeType]?.(activeContainer, overContainer, activeIndex, overIndex)
+    }
+
+    const onDragOver = (event: DragOverEvent) => {
+        console.log(event)
+        const {active, over} = event
+        if(!over)
+            return;
+        if(active.id === over.id)
+            return;
+        const activeIndex = active.data.current?.sortable?.index
+        const overIndex = over.data.current?.sortable?.index
+        const activeType = active.data.current?.type
+        const overType = over.data.current?.type
+        const activeContainer = active.data.current?.containerId
+        const overContainer = over.data.current?.containerId
+        if(activeContainer !== overContainer && activeType == overType && activeIndex != null && overIndex != null)
+            onSwapSectionHandlers.current[activeType]?.(activeContainer, overContainer, activeIndex, overIndex)
     }
 
     return (
         <DragDropHandlerContext.Provider value={{ registerHandler, registerSwapHandler }}>
-            <DndContext collisionDetection={closestCorners} onDragEnd={onDragEnd} onDragStart={onDragStart}>
+            <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd} onDragStart={onDragStart} onDragOver={onDragOver}>
                 {children}
-                {
-                    createPortal(
-                        <DragOverlay>
-                            { activeItem && <div style={{width: 300, height: 100, background: "white"}}>XXXX</div> }
-                        </DragOverlay>,
-                        document.body
-                    
-                    )
-                }
+                <DragOverlay>
+                            { activeItem && <div style={{width: 300, height: 100, background: "white"}}>{JSON.stringify(activeItem)}</div> }
+                        </DragOverlay>
             </DndContext>
         </DragDropHandlerContext.Provider>
     );

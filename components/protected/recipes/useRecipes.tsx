@@ -17,7 +17,7 @@ import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-mode
 import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
 import { DragDropResult } from "@/components/common/drag-drop/DragDropResult"
 import { Active, Over } from "@dnd-kit/core"
-import { arrayMove } from "@dnd-kit/sortable"
+import { arrayMove, arraySwap } from "@dnd-kit/sortable"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -119,18 +119,50 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
-    const swapSameRecipeSection = (containerId: string, activeIndex: number, overIndex: number) => {
-      console.log(containerId)
+    const swapRecipeSection = (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => {
+      console.log(activeContainerId)
+      console.log(overContainerId)
       console.log(activeIndex)
       console.log(overIndex)
-      const recipe = {...form.getValues(`recipes`).find(r => r.id == containerId)}
-      const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == containerId)
-      if(recipe.sections) {
-        let newSections = arrayMove(recipe.sections, activeIndex, overIndex)
-        newSections = normalizeRecipeSectionsSortOrder(newSections)
-        form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      const swapInSameRecipeSection = activeContainerId === overContainerId
+      if(swapInSameRecipeSection) {
+        const recipe = {...form.getValues(`recipes`).find(r => r.id == overContainerId)}
+        if(recipe.sections) {
+          let newSections = arrayMove(recipe.sections, activeIndex, overIndex)
+          newSections = normalizeRecipeSectionsSortOrder(newSections)
+          const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == overContainerId)
+          form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+        }
       }
+      const swapInDifferentRecipeSection = activeContainerId !== overContainerId
+      if(swapInDifferentRecipeSection) {
+        console.log("DIFFERENT SECTION")
+        const recipes = [...form.getValues('recipes')]
+        const activeRecipe = recipes.find(r => r.id == activeContainerId)
+        const overRecipe = recipes.find(r => r.id == overContainerId)
+        if(activeRecipe?.sections && overRecipe?.sections) {
+          console.log(activeRecipe.sections[activeIndex])
+          activeRecipe.sections[activeIndex].recipeId = overContainerId
+          const sectionToMove = activeRecipe?.sections.find((s, i) => i === activeIndex)
+          const freshSectionToMove: RecipeSectionModel = {
+            ...sectionToMove, 
+            //id: generateTrackingId(), 
+            recipeId: overContainerId, 
+            ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
+          }
+          activeRecipe?.sections.splice(activeIndex, 1) // Removes from source index
+          overRecipe?.sections.splice(overIndex, 0, freshSectionToMove) // Adds to destination index
 
+
+          //newSections = normalizeRecipeSectionsSortOrder(newSections)
+          //const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == overContainerId)
+          //console.log("swapz")
+          //form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+
+          const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
+          form.setValue('recipes', normalizedItems, {shouldDirty: true})
+        }
+      }
     }
 
     const moveRecipeSection = (result: DragDropResult): void => {
@@ -204,7 +236,7 @@ export const useRecipes = () => {
       deleteRecipeSection,
       changeRecipeSectionType,
       toogleSectionLinkEdit,
-      swapSameRecipeSection,
+      swapRecipeSection,
       moveRecipeSection,
       createIngredient,
       deleteIngredient,

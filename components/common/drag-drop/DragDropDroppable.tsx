@@ -12,7 +12,6 @@ export const DragDropDroppable = <TItems,>(p: DragDropDroppableProps<TItems>) =>
 
     return(
         <div>
-            <p>{p.id}</p>
             <SortableContext items={p.items.map(el => el.id)} strategy={verticalListSortingStrategy}>
                 { p.children }
             </SortableContext>
