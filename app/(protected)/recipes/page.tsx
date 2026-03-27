@@ -2,7 +2,7 @@
 
 import { useRecipesApi } from "@/api/protected/recipes/useRecipesApi";
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
-import Skeleton from "@/components/common/Skeleton/skeleton";
+import ContentLoadingSkeleton from "@/components/common/Skeleton/content-loading-skeleton";
 import Recipe from "@/components/protected/recipes/recipe";
 import { RecipeModel, RecipeSchema } from "@/components/protected/recipes/recipe-model";
 import { RecipeFormProvider } from "@/components/protected/recipes/RecipeFormProvider";
@@ -18,9 +18,9 @@ import { z } from 'zod'
 const Loading = () => {
   return(
     <div className="flex flex-col gap-4">
-      <Skeleton/>
-      <Skeleton/>
-      <Skeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
     </div>
   )
 }

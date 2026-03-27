@@ -9,7 +9,8 @@ export const RecipeIngredientSectionModelSchema = z.object({
     title: z.string().default(""),
     ingredients: z.array(IngredientModelSchema).default([]),
     sortOrder: z.number().min(1),
-    linkedAmountUpdate: z.boolean().default(false)
+    linkedAmountUpdate: z.boolean().default(false),
+    isNew: z.boolean().default(false)
 })
 
 export type RecipeIngredientSectionModel = z.infer<typeof RecipeIngredientSectionModelSchema>

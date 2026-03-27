@@ -28,6 +28,7 @@ export const createRecipe = (
   const recipes = form.getValues().recipes
   const newRecipe: RecipeModel = {
     id: generateTrackingId(),
+    isNew: true,
     ownerId: userId,
     name: "new",
     color: taskColors.beige,
@@ -77,6 +78,7 @@ export const useRecipes = () => {
       const recipe = form.getValues(`recipes`)[recipeIndex]
       const newSection: RecipeSectionModel = {
         id: generateTrackingId(),
+        isNew: true,
         recipeId: recipe.id,
         type: 'TEXT',
         title: '',
@@ -120,10 +122,6 @@ export const useRecipes = () => {
     }
 
     const swapRecipeSection = (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => {
-      console.log(activeContainerId)
-      console.log(overContainerId)
-      console.log(activeIndex)
-      console.log(overIndex)
       const swapInSameRecipeSection = activeContainerId === overContainerId
       if(swapInSameRecipeSection) {
         const recipe = {...form.getValues(`recipes`).find(r => r.id == overContainerId)}
@@ -134,8 +132,7 @@ export const useRecipes = () => {
           form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
         }
       }
-      const swapInDifferentRecipeSection = activeContainerId !== overContainerId
-      if(swapInDifferentRecipeSection) {
+      else { // swap item to different section
         console.log("DIFFERENT SECTION")
         const recipes = [...form.getValues('recipes')]
         const activeRecipe = recipes.find(r => r.id == activeContainerId)
@@ -147,18 +144,12 @@ export const useRecipes = () => {
           const freshSectionToMove: RecipeSectionModel = {
             ...sectionToMove, 
             //id: generateTrackingId(), 
+            isNew: true,
             recipeId: overContainerId, 
-            ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
+            ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, isNew: true /*id: generateTrackingId()*/}))})
           }
           activeRecipe?.sections.splice(activeIndex, 1) // Removes from source index
           overRecipe?.sections.splice(overIndex, 0, freshSectionToMove) // Adds to destination index
-
-
-          //newSections = normalizeRecipeSectionsSortOrder(newSections)
-          //const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == overContainerId)
-          //console.log("swapz")
-          //form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
-
           const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
           form.setValue('recipes', normalizedItems, {shouldDirty: true})
         }
@@ -178,9 +169,10 @@ export const useRecipes = () => {
       if(!sourceRecipe || !destinationRecipe || !sectionToMove) return;
       const freshSectionToMove: RecipeSectionModel = {
         ...sectionToMove, 
-        id: generateTrackingId(), 
+        id: generateTrackingId(),
+        isNew: true,
         recipeId: destinationRecipe?.id, 
-        ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
+        ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId(), isNew: true}))})
       }
       sourceRecipe?.sections.splice(result.initial.itemIndex, 1) // Removes from source index
       destinationRecipe?.sections.splice(result.target.itemIndex, 0, freshSectionToMove) // Adds to destination index
@@ -195,6 +187,7 @@ export const useRecipes = () => {
     const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
     ingredients.push({
       id: generateTrackingId(),
+      isNew: true,
       name: '',
       amount: 0,
       unit: '',
@@ -216,9 +209,11 @@ export const useRecipes = () => {
     let newSections = [...form.getValues(`recipes.${recipeIndex}.sections`)]
     const newSection = structuredClone(newSections[sectionIndex])
     newSection.id = generateTrackingId()
+    newSection.isNew = true
     if(newSection.type == 'INGREDIENTS') {
       newSection.ingredients.forEach(ingredient => {
         ingredient.id = generateTrackingId()
+        ingredient.isNew = true,
         ingredient.recipeSectionId = null
     })}
     newSections.splice(sectionIndex, 0, newSection)

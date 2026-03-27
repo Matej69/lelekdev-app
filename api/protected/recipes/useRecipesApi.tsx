@@ -1,6 +1,6 @@
 import { api } from '@/api/api';
 import { queryClient } from '@/components/common/queryClient/queryClient';
-import { nullIfTrackingIdElseKeep } from '@/components/common/utils';
+import { idOrNullIfNew, nullIfTrackingIdElseKeep } from '@/components/common/utils';
 import { RecipeModel, RecipeSchema } from '@/components/protected/recipes/recipe-model';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 
@@ -37,16 +37,16 @@ export const useRecipesApi = (ownerId: string) => {
       // TODO move this to sanitization mapper
       const sanitizedBody = { 
         ...body,
-        id: nullIfTrackingIdElseKeep(body.id),
+        id: idOrNullIfNew(body),
         sections: body.sections.map(section => ({
           ...section, 
-          id: nullIfTrackingIdElseKeep(section.id),
+          id: idOrNullIfNew(section),
           ingredients: 
             section.type == 'INGREDIENTS' ? 
             section.ingredients.map(ingredient => (
               {
                 ...ingredient,
-                id: nullIfTrackingIdElseKeep(section.id)
+                id: idOrNullIfNew(section)
               } 
             ))
             : undefined
@@ -65,11 +65,11 @@ export const useRecipesApi = (ownerId: string) => {
         ...body, 
         sections: body.sections.map(section => ({
           ...section, 
-          id: nullIfTrackingIdElseKeep(section.id),
+          id: idOrNullIfNew(section),
           ...(section.type === 'INGREDIENTS' && {
             ingredients: section.ingredients?.map(ingredient => ({
               ...ingredient, 
-              id: nullIfTrackingIdElseKeep(ingredient.id)
+              id: idOrNullIfNew(ingredient)
             }))
           })  
         }))

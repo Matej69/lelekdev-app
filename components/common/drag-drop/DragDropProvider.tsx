@@ -5,6 +5,8 @@ import { createContext, ReactNode, useRef, useState } from 'react';
 import { dragDropEventToResult, DragDropResult } from './DragDropResult';
 import { closestCorners, DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { createPortal } from 'react-dom';
+import { DraggableItemOverlay } from './DraggableItemOverlay';
+import DraggableSkeleton from '../Skeleton/draggable-skeleton';
 
 
 /**
@@ -25,7 +27,7 @@ export const DragDropHandlerContext = createContext<{
 export function DragDropProvider({ children }: { children: ReactNode })  {
     const onDragEndHandlers = useRef<{ [type: string]: (result: DragDropResult) => void }>({})
     const onSwapSectionHandlers = useRef<{ [type: string]: (activeContainerId: string | null, overContainerId: string, activeIndex: number, overIndex: number) => void }>({})
-    const [activeItem, setActiveItem] = useState(null)
+    const [activeItem, setActiveItem] = useState<{title: string | null} | null>(null)
 
     const sensors = useSensors(useSensor(
         PointerSensor, { activationConstraint: { distance: 3 } }
@@ -41,8 +43,7 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
     const onDragStart = (event: DragStartEvent) => {
         const item = event.active.data.current?.item;
         console.log(item)
-        if(item)
-            setActiveItem(item)
+        setActiveItem(item)
     }
 
     const onDragEnd = (event: DragEndEvent) => {
@@ -88,8 +89,8 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd} onDragStart={onDragStart} onDragOver={onDragOver}>
                 {children}
                 <DragOverlay>
-                            { activeItem && <div style={{width: 300, height: 100, background: "white"}}>{JSON.stringify(activeItem)}</div> }
-                        </DragOverlay>
+                            { activeItem && <DraggableSkeleton/> }
+                </DragOverlay>
             </DndContext>
         </DragDropHandlerContext.Provider>
     );

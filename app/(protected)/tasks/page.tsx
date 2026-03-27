@@ -2,7 +2,7 @@
 
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
-import Skeleton from "@/components/common/Skeleton/skeleton";
+import ContentLoadingSkeleton from "@/components/common/Skeleton/content-loading-skeleton";
 import { generateTrackingId } from "@/components/common/utils";
 import { TaskModel } from "@/components/protected/tasks/model";
 import Task from "@/components/protected/tasks/task";
@@ -15,9 +15,9 @@ import { useContext, useEffect } from "react";
 const Loading = () => {
   return(
     <div className="flex flex-col gap-4">
-      <Skeleton/>
-      <Skeleton/>
-      <Skeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
     </div>
   )
 }

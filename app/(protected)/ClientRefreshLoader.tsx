@@ -7,14 +7,14 @@ import UserProvider from "@/components/protected/user/userContext/UserContext";
 import { UserModel, UserSchema } from "@/components/protected/user/model";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/api/api";
-import Skeleton from "@/components/common/Skeleton/skeleton";
+import ContentLoadingSkeleton from "@/components/common/Skeleton/content-loading-skeleton";
 
 const Loading = () => {
   return(
     <div className="flex flex-col gap-4">
-      <Skeleton/>
-      <Skeleton/>
-      <Skeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
     </div>
   )
 }
