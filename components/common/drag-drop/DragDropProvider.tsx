@@ -47,11 +47,12 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
     }
 
     const onDragEnd = (event: DragEndEvent) => {
+        setActiveItem(null)
         //const result = dragDropEventToResult(event)
         //if(!result)
         //    return;
         //onDragEndHandlers.current[result.dragged.type]?.(result)
-        console.log(event)
+        console.log("event")
         const {active, over} = event
         if(!over)
             return;
@@ -88,8 +89,8 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
         <DragDropHandlerContext.Provider value={{ registerHandler, registerSwapHandler }}>
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd} onDragStart={onDragStart} onDragOver={onDragOver}>
                 {children}
-                <DragOverlay>
-                            { activeItem && <DraggableSkeleton/> }
+                <DragOverlay dropAnimation={null} style={{ cursor: 'pointer' }}>
+                        { /*activeItem && <DraggableSkeleton/>*/ }
                 </DragOverlay>
             </DndContext>
         </DragDropHandlerContext.Provider>

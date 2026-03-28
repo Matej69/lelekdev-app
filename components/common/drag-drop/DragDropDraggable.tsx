@@ -12,7 +12,7 @@ interface DragDropDraggableProps {
 }
 
 export const DragDropDraggable = (p: DragDropDraggableProps) => {
-    const { setNodeRef, attributes, listeners, transform, transition } = useSortable({
+    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: p.id,
         data: {
             item: p.item,
@@ -22,13 +22,18 @@ export const DragDropDraggable = (p: DragDropDraggableProps) => {
     });
 
     const style = {
-        transition,
-        transform: CSS.Transform.toString(transform)
+        transform: CSS.Transform.toString(transform),
+        transition: `${transition}, opacity 0.3s ease`,
+        opacity: isDragging ? 0.4 : 1
+
+    }
+    const overlayStyle = {
+        backgroundColor: isDragging ? '#eee' : undefined,
     }
 
     return(
         <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
-          { p.children }
+            { p.children }
         </div>
     )
 }
