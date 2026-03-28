@@ -30,6 +30,7 @@ interface RecipeProps {
 export default function Recipe(p: RecipeProps) {
   const recipesActions = useRecipes()
   const form = useFormContext<{recipes: RecipeModel[]}>()
+  const recipe = form.getValues(`recipes.${p.recipeIndex}`) 
   const [id, name, color, sections] = useWatch({
     control: form.control,
     name: [
@@ -47,7 +48,6 @@ export default function Recipe(p: RecipeProps) {
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
-    dragDropContext.registerSwapHandler(`recipe-section`, recipesActions.swapRecipeSection)
   }, [])
 
   const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
@@ -80,14 +80,16 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable id={`${id}`} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]}>
-          {
-            sections.map((section, sectionIndex) => { return (
-              <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
-                <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
-              </DragDropDraggable>
-            )})
-          }  
+        <DragDropDroppable id={`${id}`} item={recipe} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]}>
+          <div className="min-h-14">
+            {
+              sections.map((section, sectionIndex) => { return (
+                <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
+                  <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
+                </DragDropDraggable>
+              )})
+            }  
+          </div>
         </DragDropDroppable>  
       </div>
     );

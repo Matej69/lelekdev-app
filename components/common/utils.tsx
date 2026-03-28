@@ -1,4 +1,7 @@
 // Used for generating new item tracking ids that
+
+import { UseFormReturn } from "react-hook-form";
+
 // Only used as keys in the frontend until the item is saved and gets a real id from the backend
 export const generateTrackingId = () => {
     return `[new]${crypto.randomUUID()}`
@@ -16,4 +19,8 @@ export const idOrNullIfNew = <TItem extends {id: string | null, isNew: boolean},
 export const maxPlus1Or1 = <TItem,> (collection: TItem[], extractor: (el: TItem) => number) => {
   if(collection.length == 0) return 1
   return Math.max(...collection.map(r => extractor(r))) + 1
+}
+
+export const forceFormDirtiness = (form: UseFormReturn<any>, formPath: string) => {
+  form.setValue(`${formPath}._forceFormDirtinessFlag`, generateTrackingId(), {shouldDirty: true})
 }

@@ -17,6 +17,7 @@ export const DragDropDraggable = (p: DragDropDraggableProps) => {
         data: {
             item: p.item,
             type: p.type,
+            index: p.index,
             containerId: p.containerId
         },
     });

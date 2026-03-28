@@ -15,8 +15,6 @@ export const normalizeRecipeSortOrder = (recipes: RecipeModel[]): RecipeModel[] 
 // Normalization works for task items that are already sorted by sortOrder
 // If not then wrong indices will be asigned to sort order
 export const normalizeRecipeSectionsSortOrder = (sections: RecipeSectionModel[]): RecipeSectionModel[] => {
-    console.log("Normalize with")
-    console.log(sections)
     return sections.map((section, index) => ({
         ...section,
         sortOrder: index + 1,
