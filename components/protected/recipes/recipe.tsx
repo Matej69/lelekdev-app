@@ -80,8 +80,7 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable id={`${id}`} item={recipe} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]}>
-          <div className="min-h-14">
+        <DragDropDroppable id={`${id}`} item={recipe} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]} style={{ minHeight: '4rem' }}>
             {
               sections.map((section, sectionIndex) => { return (
                 <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
@@ -89,7 +88,6 @@ export default function Recipe(p: RecipeProps) {
                 </DragDropDraggable>
               )})
             }  
-          </div>
         </DragDropDroppable>  
       </div>
     );

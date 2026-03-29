@@ -1,11 +1,7 @@
 'use client'
 
-import { useTasks } from '@/components/protected/tasks/useTasks';
 import { createContext, ReactNode, useRef, useState } from 'react';
-import { closestCorners, DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, pointerWithin, useSensor, useSensors } from '@dnd-kit/core';
-import { createPortal } from 'react-dom';
-import { DraggableItemOverlay } from './DraggableItemOverlay';
-import DraggableSkeleton from '../Skeleton/draggable-skeleton';
+import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from '@dnd-kit/core';
 import { mapEventToDragData, DragEvent } from './DragEvent';
 
 

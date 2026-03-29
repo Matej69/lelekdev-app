@@ -25,11 +25,7 @@ export const DragDropDraggable = (p: DragDropDraggableProps) => {
     const style = {
         transform: CSS.Transform.toString(transform),
         transition: `${transition}, opacity 0.3s ease`,
-        opacity: isDragging ? 0.4 : 1
-
-    }
-    const overlayStyle = {
-        backgroundColor: isDragging ? '#eee' : undefined,
+        opacity: isDragging ? 0.4 : 1,
     }
 
     return(

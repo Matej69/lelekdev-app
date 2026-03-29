@@ -20,7 +20,6 @@ export const useRecipesApi = (ownerId: string) => {
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
-        //console.log(json
         //  .map(recipe => RecipeSchema.safeParse(recipe))
         //  .filter(r => !r.success)
         //  .map(r => r.error.issues)

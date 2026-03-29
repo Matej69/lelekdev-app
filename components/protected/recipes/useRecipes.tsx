@@ -66,7 +66,6 @@ export const useRecipes = () => {
       const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
       const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
       const errors = form.formState.errors.recipes?.[recipeIndex];
-      //console.log(errors);
       if (!isFormValid) return;
       const res = await recipeService.updateRecipe.mutateAsync(recipeToUpdate)
       if(!res) return;
@@ -155,7 +154,6 @@ export const useRecipes = () => {
       }
       
       else if(dragState.groupEquality == 'DIFFERENT' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
-        console.log(dragEvent)
         const recipes = [...form.getValues('recipes')]
         const activeRecipe = recipes.find(r => r.id == active.groupId)
         const overRecipe = recipes.find(r => r.id == over.groupId)
@@ -169,7 +167,7 @@ export const useRecipes = () => {
           overRecipe.sections = normalizeRecipeSectionsSortOrder(overRecipe?.sections)
           form.setValue('recipes', recipes, {shouldDirty: true})
           const activeRecipeIndex = recipes.findIndex(r => r.id == active.groupId)
-          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`) // Needed since deleting last tiem doesnt trigger it
+          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`) // Needed since deleting last item doesn't trigger it
         }
       }
       
@@ -177,8 +175,6 @@ export const useRecipes = () => {
         const recipes = [...form.getValues('recipes')]
         const activeRecipe = recipes.find(r => r.id == active.groupId)
         const overRecipe = recipes.find(r => r.id == over.id)
-        //console.log(activeRecipe)
-        //console.log(overRecipe)
         if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index) {
           activeRecipe.sections[active.index].recipeId = over.id
           const sectionToMove = activeRecipe?.sections.find((s, i) => i === active.index)
@@ -187,7 +183,6 @@ export const useRecipes = () => {
           activeRecipe.sections = normalizeRecipeSectionsSortOrder(activeRecipe?.sections)
           overRecipe?.sections.push(newSection) // Adds to destination index
           overRecipe.sections = normalizeRecipeSectionsSortOrder(overRecipe?.sections)
-          //const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
           form.setValue('recipes', recipes, {shouldDirty: true})
         }
       }
