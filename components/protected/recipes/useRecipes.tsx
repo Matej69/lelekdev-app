@@ -94,6 +94,7 @@ export const useRecipes = () => {
       const newSections = [...form.getValues('recipes')[recipeIndex].sections]
       newSections.splice(sectionIndex, 1)
       form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      forceFormDirtiness(form, `recipes.${recipeIndex}.sections`)
     }
 
     const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, newType: RecipeSectionType) => {
@@ -209,6 +210,7 @@ export const useRecipes = () => {
     ingredients.splice(ingredientIndex, 1)
     ingredients = normalizeIngredientsSortOrder(ingredients)
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+    forceFormDirtiness(form, `recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
   }
 
   const duplicateRecipeSection = (recipeIndex: number, sectionIndex: number) => {
