@@ -20,7 +20,7 @@ export const normalizeRecipeSectionsSortOrder = (sections: RecipeSectionModel[])
         sortOrder: index + 1,
         ...(section.type === 'INGREDIENTS' && { ingredients: normalizeIngredientsSortOrder(section.ingredients)})
     }))
-} 
+}
 // Ingredients normalization
 export const normalizeIngredientsSortOrder = (ingredients: IngredientModel[]): IngredientModel[] => {
     return ingredients.map((ingredient, index) => ({

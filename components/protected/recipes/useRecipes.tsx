@@ -1,7 +1,7 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "../tasks/model"
-import { forceFormDirtiness, generateTrackingId, maxPlus1Or1 } from "@/components/common/utils"
+import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection } from "@/components/common/utils"
 import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
@@ -16,7 +16,6 @@ import { RecipeIngredientSectionModel, RecipeIngredientSectionModelSchema } from
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
 import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
 import { Active, Over } from "@dnd-kit/core"
-import { arrayMove, arraySwap } from "@dnd-kit/sortable"
 import { DragEvent } from "@/components/common/drag-drop/DragEvent"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
@@ -123,7 +122,7 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
-    const newSectionFromExisting = (section: RecipeSectionModel, recipeId: string) => {
+    const newShallowCopySectionFromExisting = (section: RecipeSectionModel, recipeId: string) => {
       return {
             ...section,
             isNew: true,
@@ -144,46 +143,46 @@ export const useRecipes = () => {
         draggedTo: active.type !== over.type && overEmptyContainer ? 'EMPTY_CONTAINER' : 'NON_EMPTY_CONTAINER'
       } as const
 
+      // Dragged to another position within same recipe
       if(dragState.groupEquality == 'SAME' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
         const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
         if(recipe.sections && over.index != null) {
-          let newSections = arrayMove(recipe.sections, active.index, over.index)
-          newSections = normalizeRecipeSectionsSortOrder(newSections)
+          const newSections = moveInCollection(recipe.sections, active.index, over.index)
           const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == over.groupId)
           form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
         }
       }
-      
+      // Dragged to another recipe with at least one section
       else if(dragState.groupEquality == 'DIFFERENT' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
         const recipes = [...form.getValues('recipes')]
         const activeRecipe = recipes.find(r => r.id == active.groupId)
         const overRecipe = recipes.find(r => r.id == over.groupId)
         if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index && over.groupId && over.index != null) {
           activeRecipe.sections[active.index].recipeId = over.groupId
-          const sectionToMove = activeRecipe?.sections.find((s, i) => i === active.index)
-          const newSection = newSectionFromExisting(sectionToMove as RecipeSectionModel, over.groupId)
-          activeRecipe?.sections.splice(active.index, 1) // Removes from source index
-          activeRecipe.sections = normalizeRecipeSectionsSortOrder(activeRecipe?.sections)
-          overRecipe?.sections.splice(over.index, 0, newSection) // Adds to destination index
-          overRecipe.sections = normalizeRecipeSectionsSortOrder(overRecipe?.sections)
-          form.setValue('recipes', recipes, {shouldDirty: true})
+          moveAcrossCollections(
+            activeRecipe.sections, active.index,
+            overRecipe.sections, over.index,
+            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, over.groupId!)
+          )
           const activeRecipeIndex = recipes.findIndex(r => r.id == active.groupId)
-          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`) // Needed since deleting last item doesn't trigger it
+          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`)
+          form.setValue('recipes', recipes, {shouldDirty: true})
         }
       }
-      
+      // Dragged to another recipe with no sections
       else if (dragState.groupEquality == 'DIFFERENT' && dragState.draggedTo == 'EMPTY_CONTAINER') {
         const recipes = [...form.getValues('recipes')]
         const activeRecipe = recipes.find(r => r.id == active.groupId)
         const overRecipe = recipes.find(r => r.id == over.id)
         if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index) {
           activeRecipe.sections[active.index].recipeId = over.id
-          const sectionToMove = activeRecipe?.sections.find((s, i) => i === active.index)
-          const newSection = newSectionFromExisting(sectionToMove as RecipeSectionModel, over.id)
-          activeRecipe?.sections.splice(active.index, 1) // Removes from source index
-          activeRecipe.sections = normalizeRecipeSectionsSortOrder(activeRecipe?.sections)
-          overRecipe?.sections.push(newSection) // Adds to destination index
-          overRecipe.sections = normalizeRecipeSectionsSortOrder(overRecipe?.sections)
+          moveAcrossCollections(
+            activeRecipe.sections, active.index,
+            overRecipe.sections, 0,
+            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, over.id!)
+          )
+          const activeRecipeIndex = recipes.findIndex(r => r.id == active.groupId)
+          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`)
           form.setValue('recipes', recipes, {shouldDirty: true})
         }
       }

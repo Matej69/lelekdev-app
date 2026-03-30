@@ -1,5 +1,6 @@
 // Used for generating new item tracking ids that
 
+import { arrayMove } from "@dnd-kit/sortable";
 import { UseFormReturn } from "react-hook-form";
 
 // Only used as keys in the frontend until the item is saved and gets a real id from the backend
@@ -21,6 +22,57 @@ export const maxPlus1Or1 = <TItem,> (collection: TItem[], extractor: (el: TItem)
   return Math.max(...collection.map(r => extractor(r))) + 1
 }
 
+/**
+ * Used since deleting last item in array is not detected in forms as dirty
+ * It doesn't properly trigger update sinceo ther items didn't change and deleted one isn't tehnicaly dirty(doesnt exist)
+ * @param form 
+ * @param formPath 
+ */
 export const forceFormDirtiness = (form: UseFormReturn<any>, formPath: string) => {
   form.setValue(`${formPath}._forceFormDirtinessFlag`, generateTrackingId(), {shouldDirty: true})
+}
+
+/**
+ * Mutates original arrays by moving element from source index to destination index.
+ * Mutates moved item by 'itemToMoveTransform'.
+ * @param source 
+ * @param sourceIndex 
+ * @param destination 
+ * @param destinationIndex 
+ * @param itemToMoveTransform 
+ * @returns 
+ */
+export const moveAcrossCollections = <T,> (
+  source: T[], 
+  sourceIndex: number, 
+  destination: T[], 
+  destinationIndex: number, 
+  itemToMoveTransform?: (item: T) => T
+): [T[], T[]] => {
+  if(!source || !destination || sourceIndex >= source.length || destinationIndex > destination.length)
+    return [source, destination];
+  const itemToMove = itemToMoveTransform?.(source[sourceIndex]) || source[sourceIndex];
+  source.splice(sourceIndex, 1)
+  destination.splice(destinationIndex, 0, itemToMove)
+  return [[...source], [...destination]];
+}
+
+/**
+ * Moves element inside collectiona nd returns shallow copy.
+ * @param collection 
+ * @param fromIndex 
+ * @param toIndex 
+ * @param itemToMoveTransform 
+ * @returns 
+ */
+export const moveInCollection = <T,> (
+  collection: T[], 
+  fromIndex: number, 
+  toIndex: number, 
+  itemToMoveTransform?: (item: T) => T
+): T[] => {
+  if(!collection || fromIndex >= collection.length || toIndex > collection.length)
+    return collection;
+  itemToMoveTransform?.(collection[fromIndex])
+  return arrayMove(collection, fromIndex, toIndex)
 }
