@@ -74,6 +74,23 @@ export const useRecipes = () => {
       });
     }
 
+    const moveRecipe = (dragEvent: DragEvent) => {
+      //const { active, over } = dragEvent
+      //const isDraggingSection = active.type === 'recipe-section'
+      //const isDropLocationSectionOrSectionItem = over.type === 'recipe-section' || over.type === 'recipe-section-container'  
+      //if(!isDraggingSection || !isDropLocationSectionOrSectionItem)
+      //  return;
+      //const overEmptyContainer = form.getValues(`recipes`).find(r => r.id == over.id)?.sections?.length == 0
+      //if(active.groupId === over.groupId) {
+      //  const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
+      //  if(recipe.sections && over.index != null) {
+      //    const newSections = moveInCollection(recipe.sections, active.index, over.index)
+      //    const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == over.groupId)
+      //    form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      //  }
+      //}
+    }
+
     const createRecipeSection = (recipeIndex: number) => {
       const recipe = form.getValues(`recipes`)[recipeIndex]
       const newSection: RecipeSectionModel = {
@@ -224,7 +241,6 @@ export const useRecipes = () => {
         ingredient.recipeSectionId = null
     })}
     newSections.splice(sectionIndex, 0, newSection)
-    newSections = normalizeRecipeSectionsSortOrder(newSections)
     form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
   }
 
@@ -234,6 +250,7 @@ export const useRecipes = () => {
       changeRecipeColor,
       deleteRecipe,
       updateRecipe,
+      moveRecipe,
       createRecipeSection,
       deleteRecipeSection,
       changeRecipeSectionType,

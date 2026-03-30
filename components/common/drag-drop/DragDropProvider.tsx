@@ -14,10 +14,6 @@ export const DragDropHandlerContext = createContext<{
     registerHandler: () => {},
 });
 
-/**
- * Handler
- */
-
 export function DragDropProvider({ children }: { children: ReactNode })  {
     const moveHandlers = useRef<{ [type: string]: (dragEvent: DragEvent) => void }>({})
     const [activeItem, setActiveItem] = useState<{title: string | null} | null>(null)

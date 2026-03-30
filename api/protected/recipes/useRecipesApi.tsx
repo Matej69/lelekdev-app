@@ -2,6 +2,8 @@ import { api } from '@/api/api';
 import { queryClient } from '@/components/common/queryClient/queryClient';
 import { idOrNullIfNew, nullIfTrackingIdElseKeep } from '@/components/common/utils';
 import { RecipeModel, RecipeSchema } from '@/components/protected/recipes/recipe-model';
+import { RecipeSectionModel } from '@/components/protected/recipes/sections/recipe-section-schema';
+import { normalizeRecipeSectionsSortOrder } from '@/components/protected/recipes/utils';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 
 
@@ -20,11 +22,6 @@ export const useRecipesApi = (ownerId: string) => {
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
-        //  .map(recipe => RecipeSchema.safeParse(recipe))
-        //  .filter(r => !r.success)
-        //  .map(r => r.error.issues)
-        //)
-      
         onSuccess(result)
         return result
       },
@@ -73,6 +70,7 @@ export const useRecipesApi = (ownerId: string) => {
           })  
         }))
       }
+      bodyWithoutTrackingIds.sections = normalizeRecipeSectionsSortOrder(bodyWithoutTrackingIds.sections as RecipeSectionModel[])
       const res = await api.put(`/recipes`, bodyWithoutTrackingIds);
       return res.data;
     },
