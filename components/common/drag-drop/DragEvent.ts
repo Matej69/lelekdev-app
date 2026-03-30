@@ -15,13 +15,15 @@ const DragActiveParticipantSchema = z.object({
     id: z.string(),
     index: z.number(),
     type: z.string(),
-    groupId: z.string()
+    groupId: z.string(),
+    acceptTypes: z.array(z.string())
 })
 const DragOverParticipantSchema = z.object({
     id: z.string(),
     index: z.number().nullish(),
     type: z.string(),
-    groupId: z.string().nullish()
+    groupId: z.string().nullish(),
+    acceptTypes: z.array(z.string())
 })
 
 type DragParticipantKeys = keyof z.infer<typeof DragActiveParticipantSchema>
@@ -40,13 +42,15 @@ export const mapEventToDragData = (event: DragOverEvent): DragEvent | null => {
           id: active?.item?.id,
           index: active?.index,
           type: active?.type,
-          groupId: active?.containerId
+          groupId: active?.containerId,
+          acceptTypes: active?.acceptTypes || []
       },
       over: {
           id: over?.item?.id,
           index: over?.index,
           type: over?.type,
-          groupId: over?.containerId
+          groupId: over?.containerId,
+          acceptTypes: over?.acceptTypes || []
       },
     })
     if(!result.success)

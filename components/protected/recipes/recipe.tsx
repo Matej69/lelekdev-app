@@ -21,6 +21,7 @@ import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
+import { useDndMonitor } from "@dnd-kit/core";
 
 
 interface RecipeProps {
@@ -65,6 +66,7 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
+              <p>{form.getValues(`recipes.${p.recipeIndex}.sortOrder`)}</p>
               <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
               { errorMessages?.name?.message &&  <p className="text-red-500 pl-1">{errorMessages?.name?.message}</p>}
              </div>
@@ -83,7 +85,7 @@ export default function Recipe(p: RecipeProps) {
         <DragDropDroppable id={`${id}`} item={recipe} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]} style={{ minHeight: '4rem' }}>
             {
               sections.map((section, sectionIndex) => { return (
-                <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" key={`${section.id}`}>
+                <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" acceptTypes={["recipe-section"]} key={`${section.id}`}>
                   <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
                 </DragDropDraggable>
               )})

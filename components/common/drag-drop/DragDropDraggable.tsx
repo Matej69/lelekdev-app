@@ -7,6 +7,7 @@ interface DragDropDraggableProps {
     containerId: string,
     index: number,
     type: string,
+    acceptTypes: string[],
     children: React.ReactNode,
     item: any
 }
@@ -18,14 +19,15 @@ export const DragDropDraggable = (p: DragDropDraggableProps) => {
             item: p.item,
             type: p.type,
             index: p.index,
-            containerId: p.containerId
+            containerId: p.containerId,
+            acceptTypes: p.acceptTypes
         },
     });
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition: `${transition}, opacity 0.3s ease`,
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.4 : 1
     }
 
     return(

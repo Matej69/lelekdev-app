@@ -76,3 +76,18 @@ export const moveInCollection = <T,> (
   itemToMoveTransform?.(collection[fromIndex])
   return arrayMove(collection, fromIndex, toIndex)
 }
+
+export const updateSortOrderOnItemMove = <T extends {sortOrder: number},> (collection: T[], movedFromIndex: number, movedToIndex: number): T[] => {
+  if(!collection || movedFromIndex < 0 || movedFromIndex >= collection.length || movedToIndex < 0 || movedToIndex >= collection.length)
+    return collection;
+  const [movedDown, movedUp] = [movedFromIndex < movedToIndex, movedFromIndex > movedToIndex]
+  collection.forEach((item, i) => {
+      if(
+        (movedDown && i >= movedFromIndex && i <= movedToIndex) ||
+        (movedUp && i >= movedToIndex && i <= movedFromIndex)
+      )
+        item.sortOrder = i + 1
+    })
+  return [...collection]
+}
+

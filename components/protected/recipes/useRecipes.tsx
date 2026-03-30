@@ -1,7 +1,7 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "../tasks/model"
-import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection } from "@/components/common/utils"
+import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection, updateSortOrderOnItemMove } from "@/components/common/utils"
 import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
@@ -37,6 +37,7 @@ export const createRecipe = (
   mutateFun(newRecipe, (createdRecipe) => {
     newRecipe.id = createdRecipe.id
     recipes.splice(0, 0, newRecipe)
+    recipes.forEach((recipe, i) => { if(i > 0) recipe.sortOrder += 1}) // Push other recipes down
     form.setValue('recipes', recipes);
   })
 }
@@ -75,20 +76,16 @@ export const useRecipes = () => {
     }
 
     const moveRecipe = (dragEvent: DragEvent) => {
-      //const { active, over } = dragEvent
-      //const isDraggingSection = active.type === 'recipe-section'
-      //const isDropLocationSectionOrSectionItem = over.type === 'recipe-section' || over.type === 'recipe-section-container'  
-      //if(!isDraggingSection || !isDropLocationSectionOrSectionItem)
-      //  return;
-      //const overEmptyContainer = form.getValues(`recipes`).find(r => r.id == over.id)?.sections?.length == 0
-      //if(active.groupId === over.groupId) {
-      //  const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
-      //  if(recipe.sections && over.index != null) {
-      //    const newSections = moveInCollection(recipe.sections, active.index, over.index)
-      //    const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == over.groupId)
-      //    form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
-      //  }
-      //}
+      const { active, over } = dragEvent
+      const isDraggingRecipe = active.type === 'recipe'
+      if(!isDraggingRecipe || active.groupId !== over.groupId) // Only for recipe within same container
+        return;
+      const recipes = form?.getValues(`recipes`)
+      if(over.index != null) {
+        const newRecipes = moveInCollection(recipes, active.index, over.index)
+        updateSortOrderOnItemMove(newRecipes, active.index, over.index)
+        form.setValue(`recipes`, newRecipes, { shouldDirty: true })
+      }
     }
 
     const createRecipeSection = (recipeIndex: number) => {

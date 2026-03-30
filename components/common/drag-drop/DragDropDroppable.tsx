@@ -17,7 +17,8 @@ export const DragDropDroppable = <TItems,>(p: DragDropDroppableProps<TItems>) =>
         id: p.id,
         data: {
             item: p.item,
-            type: p.type
+            type: p.type,
+            acceptTypes: p.acceptTypes
         },
     });
 
