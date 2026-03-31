@@ -1,6 +1,7 @@
 // Used for generating new item tracking ids that
 
 import { arrayMove } from "@dnd-kit/sortable";
+import { dir } from "console";
 import { UseFormReturn } from "react-hook-form";
 
 // Only used as keys in the frontend until the item is saved and gets a real id from the backend
@@ -69,25 +70,34 @@ export const moveInCollection = <T,> (
   collection: T[], 
   fromIndex: number, 
   toIndex: number, 
-  itemToMoveTransform?: (item: T) => T
+  //itemToMoveTransform?: (item: T) => T
 ): T[] => {
-  if(!collection || fromIndex >= collection.length || toIndex > collection.length)
+  if(!collection || fromIndex < 0 || toIndex < 0 || fromIndex >= collection.length || toIndex > collection.length || fromIndex == toIndex)
     return collection;
-  itemToMoveTransform?.(collection[fromIndex])
-  return arrayMove(collection, fromIndex, toIndex)
+  const itemToMove = collection[fromIndex]
+  // If item has 'sortOrder' shift items in between by 1 in the right direction
+  const hasSortOrder = objectContainsField(itemToMove, 'sortOrder')
+  if(hasSortOrder) {
+    (itemToMove as any).sortOrder = toIndex + 1
+    const sortShiftData =
+      fromIndex < toIndex ? { start: fromIndex + 1, end: toIndex, moveAmount: -1 } : // item moved down, items in between should move up
+      fromIndex > toIndex ? { start: toIndex, end: fromIndex - 1, moveAmount: 1 } : // item moved up, items in between should move down
+      null;
+      collection.forEach((item, i) => {
+        if(sortShiftData && i >= sortShiftData?.start && i <= sortShiftData?.end) {
+          (item as any).sortOrder += sortShiftData.moveAmount
+        }
+      })
+  }
+  // Move item
+  const newCollection = arrayMove(collection, fromIndex, toIndex)
+  //itemToMoveTransform?.(itemToMove)
+  return newCollection
 }
 
-export const updateSortOrderOnItemMove = <T extends {sortOrder: number},> (collection: T[], movedFromIndex: number, movedToIndex: number): T[] => {
-  if(!collection || movedFromIndex < 0 || movedFromIndex >= collection.length || movedToIndex < 0 || movedToIndex >= collection.length)
-    return collection;
-  const [movedDown, movedUp] = [movedFromIndex < movedToIndex, movedFromIndex > movedToIndex]
-  collection.forEach((item, i) => {
-      if(
-        (movedDown && i >= movedFromIndex && i <= movedToIndex) ||
-        (movedUp && i >= movedToIndex && i <= movedFromIndex)
-      )
-        item.sortOrder = i + 1
-    })
-  return [...collection]
+export const objectContainsField = (
+  obj: any,
+  fieldName: string
+): obj is { [key: string]: any } => {
+  return typeof obj === 'object' && obj !== null && fieldName in obj;
 }
-

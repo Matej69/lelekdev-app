@@ -1,7 +1,7 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "../tasks/model"
-import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection, updateSortOrderOnItemMove } from "@/components/common/utils"
+import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection } from "@/components/common/utils"
 import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
@@ -48,12 +48,13 @@ export const useRecipes = () => {
     const form = useFormContext<{recipes: RecipeModel[]}>()
 
     const deleteRecipe = async (index: number) => {
-      const recipes = form.getValues().recipes
+      let recipes = [...form.getValues().recipes]
       const recipeToDelete = recipes[index]
       recipeService.deleteRecipe.mutate(recipeToDelete.id, {
         onSuccess: () => {
-          const newRecipes = recipes.filter(r => r.id != recipeToDelete.id) 
-          form.setValue('recipes', newRecipes)
+          recipes = recipes.filter(r => r.id != recipeToDelete.id) 
+          recipes.forEach((r, i) => { r.sortOrder = i >= index ? r.sortOrder - 1 : r.sortOrder}) // Move up recipes after deleted one
+          form.setValue('recipes', recipes)
         }
       })
     };
@@ -82,9 +83,9 @@ export const useRecipes = () => {
         return;
       const recipes = form?.getValues(`recipes`)
       if(over.index != null) {
-        const newRecipes = moveInCollection(recipes, active.index, over.index)
-        updateSortOrderOnItemMove(newRecipes, active.index, over.index)
+        let newRecipes = moveInCollection(recipes, active.index, over.index)
         form.setValue(`recipes`, newRecipes, { shouldDirty: true })
+        recipeService.updateRecipe.mutate(newRecipes[over.index])
       }
     }
 

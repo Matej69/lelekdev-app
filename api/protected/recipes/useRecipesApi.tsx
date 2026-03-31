@@ -70,7 +70,7 @@ export const useRecipesApi = (ownerId: string) => {
           })  
         }))
       }
-      bodyWithoutTrackingIds.sections = normalizeRecipeSectionsSortOrder(bodyWithoutTrackingIds.sections as RecipeSectionModel[])
+      //bodyWithoutTrackingIds.sections = normalizeRecipeSectionsSortOrder(bodyWithoutTrackingIds.sections as RecipeSectionModel[])
       const res = await api.put(`/recipes`, bodyWithoutTrackingIds);
       return res.data;
     },
