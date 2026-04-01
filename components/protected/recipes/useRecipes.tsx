@@ -66,7 +66,6 @@ export const useRecipes = () => {
     const updateRecipe = async (recipeIndex: number) => {
       const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
       const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
-      const errors = form.formState.errors.recipes?.[recipeIndex];
       if (!isFormValid) return;
       const res = await recipeService.updateRecipe.mutateAsync(recipeToUpdate)
       if(!res) return;
@@ -79,7 +78,8 @@ export const useRecipes = () => {
     const moveRecipe = (dragEvent: DragEvent) => {
       const { active, over } = dragEvent
       const isDraggingRecipe = active.type === 'recipe'
-      if(!isDraggingRecipe || active.groupId !== over.groupId) // Only for recipe within same container
+      const draggingInsideSameContainer = !isDraggingRecipe || active.groupId !== over.groupId 
+      if(draggingInsideSameContainer)
         return;
       const recipes = form?.getValues(`recipes`)
       if(over.index != null) {
@@ -162,6 +162,7 @@ export const useRecipes = () => {
       if(dragState.groupEquality == 'SAME' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
         const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
         if(recipe.sections && over.index != null) {
+          console.log("Over id:", over.groupId)
           const newSections = moveInCollection(recipe.sections, active.index, over.index)
           const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == over.groupId)
           form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
@@ -173,7 +174,8 @@ export const useRecipes = () => {
         const activeRecipe = recipes.find(r => r.id == active.groupId)
         const overRecipe = recipes.find(r => r.id == over.groupId)
         if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index && over.groupId && over.index != null) {
-          activeRecipe.sections[active.index].recipeId = over.groupId
+          //activeRecipe.sections[active.index].recipeId = over.groupId
+          console.log("Over id:", over.groupId)
           moveAcrossCollections(
             activeRecipe.sections, active.index,
             overRecipe.sections, over.index,

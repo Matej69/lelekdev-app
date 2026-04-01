@@ -2,6 +2,7 @@
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { dir } from "console";
+import { createPortal } from "react-dom";
 import { UseFormReturn } from "react-hook-form";
 
 // Only used as keys in the frontend until the item is saved and gets a real id from the backend
@@ -50,11 +51,19 @@ export const moveAcrossCollections = <T,> (
   destinationIndex: number, 
   itemToMoveTransform?: (item: T) => T
 ): [T[], T[]] => {
-  if(!source || !destination || sourceIndex >= source.length || destinationIndex > destination.length)
+  if(!source || !destination || sourceIndex >= source.length || sourceIndex < 0 || destinationIndex > destination.length || destinationIndex < 0)
     return [source, destination];
   const itemToMove = itemToMoveTransform?.(source[sourceIndex]) || source[sourceIndex];
   source.splice(sourceIndex, 1)
+  source.forEach((item, i) => {
+    if(objectContainsField(item, 'sortOrder'))
+      (item as any).sortOrder = i + 1
+  })
   destination.splice(destinationIndex, 0, itemToMove)
+  destination.forEach((item, i) => {
+    if(objectContainsField(item, 'sortOrder'))
+      (item as any).sortOrder = i + 1
+  })
   return [[...source], [...destination]];
 }
 
@@ -69,29 +78,18 @@ export const moveAcrossCollections = <T,> (
 export const moveInCollection = <T,> (
   collection: T[], 
   fromIndex: number, 
-  toIndex: number, 
-  //itemToMoveTransform?: (item: T) => T
+  toIndex: number
 ): T[] => {
   if(!collection || fromIndex < 0 || toIndex < 0 || fromIndex >= collection.length || toIndex > collection.length || fromIndex == toIndex)
     return collection;
   const itemToMove = collection[fromIndex]
-  // If item has 'sortOrder' shift items in between by 1 in the right direction
   const hasSortOrder = objectContainsField(itemToMove, 'sortOrder')
+  let newCollection = arrayMove(collection, fromIndex, toIndex)
   if(hasSortOrder) {
-    (itemToMove as any).sortOrder = toIndex + 1
-    const sortShiftData =
-      fromIndex < toIndex ? { start: fromIndex + 1, end: toIndex, moveAmount: -1 } : // item moved down, items in between should move up
-      fromIndex > toIndex ? { start: toIndex, end: fromIndex - 1, moveAmount: 1 } : // item moved up, items in between should move down
-      null;
-      collection.forEach((item, i) => {
-        if(sortShiftData && i >= sortShiftData?.start && i <= sortShiftData?.end) {
-          (item as any).sortOrder += sortShiftData.moveAmount
-        }
-      })
+    newCollection.forEach((item, i) => {
+      (item as any).sortOrder = i + 1;
+    });
   }
-  // Move item
-  const newCollection = arrayMove(collection, fromIndex, toIndex)
-  //itemToMoveTransform?.(itemToMove)
   return newCollection
 }
 
@@ -101,3 +99,31 @@ export const objectContainsField = (
 ): obj is { [key: string]: any } => {
   return typeof obj === 'object' && obj !== null && fieldName in obj;
 }
+
+
+export const safeCreatePortal = (children: React.ReactNode, elementId: string) => {
+  const element = document.getElementById(elementId)
+  return element ? 
+    createPortal(children, element) : 
+    null;
+}
+
+/*
+ * Extracts real id from drag drop id
+ * Strips prefixes like '[type]-draggable-' or '[type]-droppable-' that are used for drag drop library and returns real id that is used in form values and backend
+ * TODO: once standars are introduced, we should only have '[type]-container-[id]' for droppable and '[type]-[id]' for draggable
+*/
+export const idFromDragDropId = (dragDropId: string): string => {
+  if(!dragDropId) 
+    return dragDropId;
+  const prefixesToStrip = ['draggable-', 'droppable-', 'container-']
+  prefixesToStrip.forEach(prefix => {
+    const prefixIndex = dragDropId?.indexOf(prefix);
+    if (prefixIndex !== -1) {
+      // Keep everything **after** the prefix
+      dragDropId = dragDropId.slice(prefixIndex + prefix.length);
+    }
+  })
+  return dragDropId
+}
+  

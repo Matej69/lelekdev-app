@@ -1,86 +1,150 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "./model"
-import { generateTrackingId } from "@/components/common/utils"
+import { forceFormDirtiness, generateTrackingId, idFromDragDropId, moveAcrossCollections, moveInCollection } from "@/components/common/utils"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { TaskItemModel } from "./item/model"
-import { normalizeTaskItemsSortOrder } from "./utils"
+import { normalizeTaskItemsSortOrder, normalizeTaskSortOrder } from "./utils"
 import { taskColors } from "./constants"
+import { DragEvent } from "@/components/common/drag-drop/DragEvent"
 
 // Has to be outside of useTask hook since it is called outside of TaskFormProvider
-export const createTask = (userId: string, tasks: TaskModel[], mutateFun: (taskToCreate: TaskModel) => void ) => {
-    const nextFreeSortOrder = tasks.length == 0 ? 1 : Math.max(...tasks.map(t => t.sortOrder)) + 1
-    const newTask: TaskModel = {
-      id: generateTrackingId(),
-      ownerId: userId,
-      title: "[NEW]",
-      color: taskColors.beige,
-      sortOrder: nextFreeSortOrder,
-      items: [],
-    }
-    mutateFun(newTask)
-  }
 
 export const useTasks = () => {
     const { id: userId } = useUserContext()
     const taskService = useTasksApi(userId)
-    const form = useFormContext<TaskModel>()
-    const formItems = useFieldArray({
-        control: form.control,
-        name: "items",
-    });
-    const items = form.watch('items');
+    const form = useFormContext<{ tasks: TaskModel[] }>()
 
-    const deleteTask = () => taskService.deleteTask.mutate(form.getValues().id);
+    const createTask = () => {
+      const newTask: TaskModel = {
+        id: generateTrackingId(),
+        ownerId: userId,
+        title: "[NEW]",
+        isNew: true,
+        color: taskColors.beige,
+        sortOrder: 1,
+        items: [],
+      }
+      taskService.create.mutate(newTask, {
+        onSuccess: (taskReceived) => {
+          const tasks = [taskReceived, ...form.getValues('tasks')]
+          tasks.forEach((task, i) => { if(i > 0) task.sortOrder += 1})
+          form.setValue('tasks', tasks)
+        }
+      });
+    }
 
-    const updateTask = () => {
-        if(form.formState.isDirty)
-            form.handleSubmit((data) => taskService.update.mutate(data))()
-    };
+    const deleteTask = (taskIndex: number) => {
+      let tasks = [...form.getValues('tasks')]
+      const taskToDelete = tasks[taskIndex]
+      let newTasks = tasks.filter(task => task.id !== taskToDelete.id)
+      newTasks = normalizeTaskSortOrder(newTasks)
+      form.setValue('tasks', newTasks, { shouldDirty: true })
+      taskService.deleteTask.mutate(taskToDelete.id);
+  };
 
-    const createTaskItem = () => { 
+    const updateTask = async (taskIndex: number) => {
+        const taskToUpdate = form.getValues(`tasks.${taskIndex}`)
+        console.log("Updating task: ", taskToUpdate)
+        const isFormValid = await form.trigger(`tasks.${taskIndex}`);
+        console.log("isFormValid: ", form.formState.errors)
+        if (!isFormValid) return;
+        const res = await taskService.update.mutateAsync(taskToUpdate)
+        console.log("Update response: ", res)
+        if(!res) return;
+        form.resetField(`tasks.${taskIndex}`, {
+          keepDirty: false,
+          defaultValue: form.getValues(`tasks.${taskIndex}`),
+        });
+      };
+
+    const createTaskItem = (taskIndex: number) => { 
         const newItem: TaskItemModel = {
           id: generateTrackingId(),
+          isNew: true,
           content: "",
           completed: false,
-          sortOrder: form.getValues().items.length + 1
+          sortOrder: form.getValues(`tasks.${taskIndex}.items`).length + 1
         }
-        formItems.append(newItem);
+        const items = [...form.getValues(`tasks.${taskIndex}.items`), newItem]
+        form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
+        //itemFieldArrays[taskIndex].append(newItem);
     };
 
-    const deleteTaskItem = (index: number) => {
-      let items = form.getValues().items
-      items = items.filter((el, i) => i != index)
+    const deleteTaskItem = (taskIndex: number, taskItemIndex: number) => {
+      let items = [...form.getValues(`tasks.${taskIndex}.items`)]
+      items = items.filter((el, i) => i != taskItemIndex)
       items = normalizeTaskItemsSortOrder(items)
-      form.setValue('items', items, { shouldDirty: true })
+      form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
+      forceFormDirtiness(form, `recipes.${taskIndex}.sections`)
     }
 
-    const completeTaskItem = (index: number) => {
-      const old = items[index]
-      formItems.update(index, { ...old, completed: !old.completed });
+    const completeTaskItem = (taskIndex: number, taskItemIndex: number) => {
+      const wasCompleted = form.getValues(`tasks.${taskIndex}.items.${taskItemIndex}.completed`)
+      form.setValue(`tasks.${taskIndex}.items.${taskItemIndex}.completed`, !wasCompleted, { shouldDirty: true })
     }
 
-    const changeColorTaskItem = (color: string) => {
-      form.setValue("color", color, { shouldDirty: true })
+    const changeColorTaskItem = (taskIndex: number, color: string) => {
+      form.setValue(`tasks.${taskIndex}.color`, color, { shouldDirty: true })
     }
 
-    /**
-     * Not only logical action but is also adapted to visual task moving, therefore it requires DragDrop library specific result stuff 
-     * TODO: Refactor when we start using one form that holds all tasks, not form per task
-     */
-    const moveTaskItem = (result: DropResult<string>): void => {
-      if(!result.destination) return;
-      if(result.source.droppableId !== result.destination.droppableId) return; // Makes sure that, for now, you can only move items inside same task - since we have diff. form for each task
-      const droppedOnSamePlace =
-      result.source.droppableId == result.destination.droppableId && 
-      result.source.index == result.destination?.index 
-      if(droppedOnSamePlace) return;
-      const newItems = [...form.getValues().items]
-      const itemToMove = newItems[result.source.index]
-      newItems.splice(result.source.index, 1) // Removes from source index
-      newItems.splice(result.destination.index, 0, itemToMove) // Adds to destination index
-      const normalizedItems = normalizeTaskItemsSortOrder(newItems) // Reassigns task order to be same as index
-      form.setValue('items', normalizedItems, {shouldDirty: true})
+    const newShallowCopyItemFromExisting = (item: TaskItemModel) => {
+      return {
+            ...item,
+            isNew: true,
+          } as TaskItemModel
+    }
+
+    const moveTaskItem = (dragEvent: DragEvent): void => {
+      const { active, over } = dragEvent
+      const [activeId, overId] = [idFromDragDropId(active.id), idFromDragDropId(over.id || '')]
+      const [activeGroupId, overGroupId] = [idFromDragDropId(active.groupId), idFromDragDropId(over.groupId || '')]
+      const isDraggingRecipeTask = active.type === 'task-item'
+      const overEmptyContainer = form.getValues(`tasks`).find(r => r.id == overId)?.items?.length == 0
+      const dragState = {
+        sameContainer: activeGroupId === overGroupId ? 'SAME' : 'DIFFERENT',
+        draggedTo: active.type !== over.type && overEmptyContainer ? 'EMPTY_CONTAINER' : 'NON_EMPTY_CONTAINER'
+      } as const
+      // Dragged to another position in same task
+      if(dragState.sameContainer === 'SAME' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
+        const taskIndex = form.getValues(`tasks`).findIndex(r => overGroupId == idFromDragDropId(r.id))
+        const task = {...form.getValues(`tasks.${taskIndex}`)}
+        if(over.index != null) {
+          task.items = moveInCollection(task.items || [], active.index, over.index)
+          form.setValue(`tasks.${taskIndex}.items`, task.items, { shouldDirty: true })
+        }
+      }
+      // Sort goes to negative for osme reason and cant be saved, 
+      if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
+        const tasks = [...form.getValues('tasks')]
+        const activeTask = tasks.find(r => r.id == activeGroupId)
+        const overTask = tasks.find(r => r.id == overGroupId)
+        if(activeTask?.items && overTask?.items && activeTask.items.length > active.index && overGroupId && over.index != null) {
+          moveAcrossCollections(
+            activeTask.items, active.index,
+            overTask.items, over.index,
+            (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
+          )
+          const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
+          forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
+          form.setValue('tasks', tasks, {shouldDirty: true})
+        }
+      }
+      else if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'EMPTY_CONTAINER') {
+        const tasks = [...form.getValues('tasks')]
+        const activeTask = tasks.find(r => r.id == activeGroupId)
+        const overTask = tasks.find(r => r.id == overId)
+        if(activeTask?.items && overTask?.items && activeTask.items.length > active.index) {
+          moveAcrossCollections(
+            activeTask.items, active.index,
+            overTask.items, 0,
+            (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
+          )
+          const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
+          forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
+          form.setValue('tasks', tasks, {shouldDirty: true})
+        }
+      }
     }
 
     return {

@@ -41,17 +41,16 @@ export default function Recipe(p: RecipeProps) {
       `recipes.${p.recipeIndex}.sections`
     ],
   });
-  const errorMessages = form.formState.errors.recipes?.[p.recipeIndex]
+  const errors = form.formState.errors.recipes?.[p.recipeIndex]
 
   const recipeDirtyFields = form.formState.dirtyFields.recipes?.[p.recipeIndex]
   const isAnyFieldDirty = recipeDirtyFields ? Object.keys(recipeDirtyFields).length > 0 : false;
-    
+  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
+
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
   }, [])
-
-  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
 
   const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.recipeIndex, color)
   const onRecipeDelete = () => recipesActions.deleteRecipe(p.recipeIndex)
@@ -66,9 +65,9 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
-              <p>{form.getValues(`recipes.${p.recipeIndex}.sortOrder`)}</p>
+              <p>{form.getValues(`recipes.${p.recipeIndex}.id`)} - {form.getValues(`recipes.${p.recipeIndex}.sortOrder`)}</p>
               <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
-              { errorMessages?.name?.message &&  <p className="text-red-500 pl-1">{errorMessages?.name?.message}</p>}
+              { errors?.name?.message &&  <p className="text-red-500 pl-1">{errors?.name?.message}</p>}
              </div>
           </div>
           {/* Actions */}

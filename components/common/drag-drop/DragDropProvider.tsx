@@ -74,8 +74,9 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
         if(active.id === over.id)
             return;
         const overAcceptsActive = over.acceptTypes.includes(active.type)
-        if(overAcceptsActive && active.groupId !== over.groupId && active.index != null)
+        if(overAcceptsActive && active.groupId !== over.groupId && active.index != null) {
             moveHandlers.current[active.type]?.({active, over})
+        }
     }
 
 
