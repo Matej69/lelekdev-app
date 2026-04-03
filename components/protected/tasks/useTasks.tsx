@@ -44,19 +44,35 @@ export const useTasks = () => {
   };
 
     const updateTask = async (taskIndex: number) => {
-        const taskToUpdate = form.getValues(`tasks.${taskIndex}`)
-        console.log("Updating task: ", taskToUpdate)
-        const isFormValid = await form.trigger(`tasks.${taskIndex}`);
-        console.log("isFormValid: ", form.formState.errors)
-        if (!isFormValid) return;
-        const res = await taskService.update.mutateAsync(taskToUpdate)
-        console.log("Update response: ", res)
-        if(!res) return;
-        form.resetField(`tasks.${taskIndex}`, {
-          keepDirty: false,
-          defaultValue: form.getValues(`tasks.${taskIndex}`),
-        });
-      };
+      const taskToUpdate = form.getValues(`tasks.${taskIndex}`)
+      console.log("Updating task: ", taskToUpdate)
+      const isFormValid = await form.trigger(`tasks.${taskIndex}`);
+      console.log("isFormValid: ", form.formState.errors)
+      if (!isFormValid) return;
+      const res = await taskService.update.mutateAsync(taskToUpdate)
+      console.log("Update response: ", res)
+      if(!res) return;
+      form.resetField(`tasks.${taskIndex}`, {
+        keepDirty: false,
+        defaultValue: form.getValues(`tasks.${taskIndex}`),
+      });
+    };
+
+    const moveTask = (dragEvent: DragEvent): void => {
+      const { active, over } = dragEvent
+      const [activeId, overId] = [idFromDragDropId(active.id), idFromDragDropId(over.id || '')]
+      const [activeGroupId, overGroupId] = [idFromDragDropId(active.groupId), idFromDragDropId(over.groupId || '')]
+      const isDraggingTask = active.type === 'task'
+      const draggingInsideSameContainer = !isDraggingTask || active.groupId !== over.groupId 
+      if(draggingInsideSameContainer)
+        return;
+      const tasks = form?.getValues(`tasks`)
+      if(over.index != null) {
+        let newRecipes = moveInCollection(tasks, active.index, over.index)
+        form.setValue(`tasks`, newRecipes, { shouldDirty: true })
+        taskService.update.mutate(newRecipes[over.index])
+      }
+    }
 
     const createTaskItem = (taskIndex: number) => { 
         const newItem: TaskItemModel = {
@@ -152,6 +168,7 @@ export const useTasks = () => {
       createTask,
       deleteTask,
       updateTask,
+      moveTask,
       createTaskItem,
       deleteTaskItem,
       completeTaskItem,

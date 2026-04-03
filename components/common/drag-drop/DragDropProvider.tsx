@@ -18,7 +18,7 @@ const collisionDetectionStrategy: Parameters<typeof DndContext>["0"]["collisionD
     const collisions = pointerWithin(args);
     if (!collisions) return [];
     const activeType = args.active?.data?.current?.type ?? '';
-    const priorityTypes = [`${activeType}-container`, `${activeType}-draggable`]
+    const priorityTypes = [`${activeType}-container`, `${activeType}-draggable`, `${activeType}-droppable`]
     const sorted = collisions.sort((a, b) => {
       const [aId, bId] = [`${a.id}`, `${b.id}`]
       const aPriority = priorityTypes.some((t) => aId.includes(t)) ? 0 : 1;
