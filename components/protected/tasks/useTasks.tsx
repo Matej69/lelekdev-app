@@ -12,7 +12,7 @@ import { DragEvent } from "@/components/common/drag-drop/DragEvent"
 
 export const useTasks = () => {
     const { id: userId } = useUserContext()
-    const taskService = useTasksApi(userId)
+    const tasksApi = useTasksApi(userId)
     const form = useFormContext<{ tasks: TaskModel[] }>()
 
     const createTask = () => {
@@ -25,7 +25,7 @@ export const useTasks = () => {
         sortOrder: 1,
         items: [],
       }
-      taskService.create.mutate(newTask, {
+      tasksApi.create.mutate(newTask, {
         onSuccess: (taskReceived) => {
           const tasks = [taskReceived, ...form.getValues('tasks')]
           tasks.forEach((task, i) => { if(i > 0) task.sortOrder += 1})
@@ -40,7 +40,7 @@ export const useTasks = () => {
       let newTasks = tasks.filter(task => task.id !== taskToDelete.id)
       newTasks = normalizeTaskSortOrder(newTasks)
       form.setValue('tasks', newTasks, { shouldDirty: true })
-      taskService.deleteTask.mutate(taskToDelete.id);
+      tasksApi.deleteTask.mutate(taskToDelete.id);
   };
 
     const updateTask = async (taskIndex: number) => {
@@ -49,7 +49,7 @@ export const useTasks = () => {
       const isFormValid = await form.trigger(`tasks.${taskIndex}`);
       console.log("isFormValid: ", form.formState.errors)
       if (!isFormValid) return;
-      const res = await taskService.update.mutateAsync(taskToUpdate)
+      const res = await tasksApi.update.mutateAsync(taskToUpdate)
       console.log("Update response: ", res)
       if(!res) return;
       form.resetField(`tasks.${taskIndex}`, {
@@ -70,7 +70,7 @@ export const useTasks = () => {
       if(over.index != null) {
         let newRecipes = moveInCollection(tasks, active.index, over.index)
         form.setValue(`tasks`, newRecipes, { shouldDirty: true })
-        taskService.update.mutate(newRecipes[over.index])
+        tasksApi.update.mutate(newRecipes[over.index])
       }
     }
 

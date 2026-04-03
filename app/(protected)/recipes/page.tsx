@@ -50,7 +50,6 @@ export default function RecipesPage() {
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Recipes</h1>
         <div id="add-recipe-placeholder"></div>
-        <CopyPlus size={52} className="border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={onCreateRecipe} />
       </div>
       {/* Recipe list */}
       <RecipeFormProvider form={form}>

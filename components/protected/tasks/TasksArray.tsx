@@ -23,7 +23,7 @@ export const TasksArray = () => {
     useEffect(() => {
       dragDropContext.registerHandler(`task`, taskActions.moveTask)
       const portal = safeCreatePortal(
-          <CopyPlus size={48} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
+          <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
           'add-task-placeholder'
       ) 
       setAddTaskPortal(portal)

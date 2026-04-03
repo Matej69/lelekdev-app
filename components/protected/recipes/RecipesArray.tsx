@@ -30,7 +30,7 @@ export const RecipesArray = (p: RecipesArrayProps) => {
     useEffect(() => {
         dragDropContext.registerHandler(`recipe`, recipesActions.moveRecipe)
         const portal = safeCreatePortal(
-          <CopyPlus size={48} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={recipesActions.createRecipe} />, 
+          <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={recipesActions.createRecipe} />, 
           'add-recipe-placeholder'
       ) 
       setAddTaskPortal(portal)
@@ -42,6 +42,7 @@ export const RecipesArray = (p: RecipesArrayProps) => {
         <DragDropDroppable
             id={'recipe-container'} item={{}} items={droppableItemIds} type="recipe-container" acceptTypes={["recipe"]}
             style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
+            { addTaskPortal }
             {
               recipes?.map((recipe, i) => { return (
                 <DragDropDraggable item={recipe} id={`recipe-draggable-${recipe.id}`} containerId={"recipe-container"} index={i} type="recipe" acceptTypes={["recipe"]} key={`recipe-${recipe.id}`}>
