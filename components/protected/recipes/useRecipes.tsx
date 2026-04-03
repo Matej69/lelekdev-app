@@ -44,13 +44,32 @@ export const createRecipe = (
 
 export const useRecipes = () => {
     const { id: userId } = useUserContext()
-    const recipeService = useRecipesApi(userId)
+    const recipesApi = useRecipesApi(userId)
     const form = useFormContext<{recipes: RecipeModel[]}>()
+
+    const createRecipe = () => {
+      const newRecipe: RecipeModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        ownerId: userId,
+        name: "new",
+        color: taskColors.beige,
+        sortOrder: 1,
+        sections: [],
+      }
+      recipesApi.createRecipe(
+        newRecipe, 
+        (recipeRecieved) => {
+          const recipes = [recipeRecieved, ...form.getValues('recipes')]
+          recipes.forEach((task, i) => { if(i > 0) task.sortOrder += 1})
+          form.setValue('recipes', recipes)
+        })
+    }
 
     const deleteRecipe = async (index: number) => {
       let recipes = [...form.getValues().recipes]
       const recipeToDelete = recipes[index]
-      recipeService.deleteRecipe.mutate(recipeToDelete.id, {
+      recipesApi.deleteRecipe.mutate(recipeToDelete.id, {
         onSuccess: () => {
           recipes = recipes.filter(r => r.id != recipeToDelete.id) 
           recipes.forEach((r, i) => { r.sortOrder = i >= index ? r.sortOrder - 1 : r.sortOrder}) // Move up recipes after deleted one
@@ -67,7 +86,7 @@ export const useRecipes = () => {
       const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
       const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
       if (!isFormValid) return;
-      const res = await recipeService.updateRecipe.mutateAsync(recipeToUpdate)
+      const res = await recipesApi.updateRecipe.mutateAsync(recipeToUpdate)
       if(!res) return;
       form.resetField(`recipes.${recipeIndex}`, {
         keepDirty: false,
@@ -85,7 +104,7 @@ export const useRecipes = () => {
       if(over.index != null) {
         let newRecipes = moveInCollection(recipes, active.index, over.index)
         form.setValue(`recipes`, newRecipes, { shouldDirty: true })
-        recipeService.updateRecipe.mutate(newRecipes[over.index])
+        recipesApi.updateRecipe.mutate(newRecipes[over.index])
       }
     }
 
@@ -247,6 +266,7 @@ export const useRecipes = () => {
 
     return {
       form,
+      createRecipe,
       changeRecipeColor,
       deleteRecipe,
       updateRecipe,
