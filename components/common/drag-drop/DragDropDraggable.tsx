@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import React from "react";
 
-interface DragDropDraggableProps {
+export interface DragDropDraggableProps {
     id: string,
     containerId: string,
     index: number,

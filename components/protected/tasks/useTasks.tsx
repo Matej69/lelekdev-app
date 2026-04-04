@@ -39,18 +39,15 @@ export const useTasks = () => {
       const taskToDelete = tasks[taskIndex]
       let newTasks = tasks.filter(task => task.id !== taskToDelete.id)
       newTasks = normalizeTaskSortOrder(newTasks)
-      form.setValue('tasks', newTasks, { shouldDirty: true })
+      form.setValue('tasks', newTasks)
       tasksApi.deleteTask.mutate(taskToDelete.id);
   };
 
     const updateTask = async (taskIndex: number) => {
       const taskToUpdate = form.getValues(`tasks.${taskIndex}`)
-      console.log("Updating task: ", taskToUpdate)
       const isFormValid = await form.trigger(`tasks.${taskIndex}`);
-      console.log("isFormValid: ", form.formState.errors)
       if (!isFormValid) return;
       const res = await tasksApi.update.mutateAsync(taskToUpdate)
-      console.log("Update response: ", res)
       if(!res) return;
       form.resetField(`tasks.${taskIndex}`, {
         keepDirty: false,
@@ -60,8 +57,6 @@ export const useTasks = () => {
 
     const moveTask = (dragEvent: DragEvent): void => {
       const { active, over } = dragEvent
-      const [activeId, overId] = [idFromDragDropId(active.id), idFromDragDropId(over.id || '')]
-      const [activeGroupId, overGroupId] = [idFromDragDropId(active.groupId), idFromDragDropId(over.groupId || '')]
       const isDraggingTask = active.type === 'task'
       const draggingInsideSameContainer = !isDraggingTask || active.groupId !== over.groupId 
       if(draggingInsideSameContainer)
@@ -84,7 +79,6 @@ export const useTasks = () => {
         }
         const items = [...form.getValues(`tasks.${taskIndex}.items`), newItem]
         form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
-        //itemFieldArrays[taskIndex].append(newItem);
     };
 
     const deleteTaskItem = (taskIndex: number, taskItemIndex: number) => {

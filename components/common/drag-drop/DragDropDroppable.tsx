@@ -2,7 +2,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSSProperties, HTMLAttributes } from "react";
 
-interface DragDropDroppableProps<TItems> {
+export interface DragDropDroppableProps {
     id: string,
     type: string,
     acceptTypes: string[],
@@ -12,7 +12,7 @@ interface DragDropDroppableProps<TItems> {
     style?: CSSProperties
 }
 
-export const DragDropDroppable = <TItems,>(p: DragDropDroppableProps<TItems>) => {
+export const DragDropDroppable = (p: DragDropDroppableProps) => {
     const { setNodeRef, isOver } = useDroppable({
         id: p.id,
         data: {

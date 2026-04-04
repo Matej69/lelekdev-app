@@ -43,8 +43,6 @@ export default function RecipesPage() {
   if (recipes.isLoading)
     return <Loading/>;
 
-  const onCreateRecipe = () => { createRecipe(form, userId, recipesApi.createRecipe) }
-
   return (
     <div className="flex flex-col h-full font-sans gap-4">
       <div className="flex justify-center items-center">

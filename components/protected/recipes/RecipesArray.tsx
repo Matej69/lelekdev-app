@@ -1,5 +1,5 @@
-import { DragDropDraggable } from '@/components/common/drag-drop/DragDropDraggable';
-import { DragDropDroppable } from '@/components/common/drag-drop/DragDropDroppable';
+import { DragDropDraggable, DragDropDraggableProps } from '@/components/common/drag-drop/DragDropDraggable';
+import { DragDropDroppable, DragDropDroppableProps } from '@/components/common/drag-drop/DragDropDroppable';
 import { DragDropHandlerContext } from '@/components/common/drag-drop/DragDropProvider';
 import { safeCreatePortal } from '@/components/common/utils';
 import Recipe from '@/components/protected/recipes/recipe';
@@ -19,9 +19,7 @@ export const RecipesArray = (p: RecipesArrayProps) => {
     const recipesActions = useRecipes()
     
     const form = useFormContext<{recipes: RecipeModel[]}>()
-    const recipes = useWatch({
-        control: form.control
-    }).recipes
+    const recipes = form.watch("recipes")
 
 
     const dragDropContext = useContext(DragDropHandlerContext)
@@ -38,14 +36,29 @@ export const RecipesArray = (p: RecipesArrayProps) => {
 
     const droppableItemIds = recipes?.map(r => ({ id: `recipe-draggable-${r.id}` })) || []
 
+    const droppableRecipeProps: Omit<DragDropDroppableProps, 'children'> = {
+      id: 'recipe-container',
+      type: 'recipe-container',
+      acceptTypes: ["recipe"],
+      items: droppableItemIds,
+      item: {},
+    };
+
+    const draggableRecipeProps = (recipe: { id: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+      id: `recipe-draggable-${recipe.id}`,
+      index: index,
+      type: "recipe",
+      acceptTypes: ["recipe"],
+      containerId: "recipe-container",
+      item: recipe,
+    });
+
     return (
-        <DragDropDroppable
-            id={'recipe-container'} item={{}} items={droppableItemIds} type="recipe-container" acceptTypes={["recipe"]}
-            style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
+        <DragDropDroppable {...droppableRecipeProps} style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
             { addTaskPortal }
             {
               recipes?.map((recipe, i) => { return (
-                <DragDropDraggable item={recipe} id={`recipe-draggable-${recipe.id}`} containerId={"recipe-container"} index={i} type="recipe" acceptTypes={["recipe"]} key={`recipe-${recipe.id}`}>
+                <DragDropDraggable key={`recipe-${recipe.id}`} {...draggableRecipeProps(recipe, i)}>
                   <Recipe key={`${recipe.id}-${i}`} recipeIndex={i}></Recipe>
                 </DragDropDraggable>
               )})

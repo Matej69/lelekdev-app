@@ -5,8 +5,8 @@ import { TaskModel } from "./model"
 import { safeCreatePortal } from "@/components/common/utils"
 import { CopyPlus } from "lucide-react"
 import { useTasks } from "./useTasks"
-import { DragDropDroppable } from "@/components/common/drag-drop/DragDropDroppable"
-import { DragDropDraggable } from "@/components/common/drag-drop/DragDropDraggable"
+import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/drag-drop/DragDropDroppable"
+import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/drag-drop/DragDropDraggable"
 import { ReactPortal, useContext, useEffect, useState } from "react"
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider"
 
@@ -29,16 +29,31 @@ export const TasksArray = () => {
       setAddTaskPortal(portal)
     }, [])
 
+    const droppableProps: Omit<DragDropDroppableProps, 'children'> = {
+        id: `task-container`,
+        type: `task-container`,
+        acceptTypes: ["task"],
+        items: draggableItemIds,
+        item: {},
+    };
+
+    const draggableProps = (task: { id: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+      id: `task-draggable-${task.id}`,
+      index: index,
+      type: "task",
+      acceptTypes: ["task"],
+      containerId: `task-container`,
+      item: task,
+    });
+
 
     return <>
         <TaskFormProvider form={form}>
             { addTaskPortal }
-            <DragDropDroppable 
-                id={`task-container`} type={`task-container`} acceptTypes={["task"]} items={draggableItemIds} item={{}}
-                style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
+            <DragDropDroppable {...droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
                 {
                   tasks.map((task, i) => { return (
-                      <DragDropDraggable id={`task-draggable-${task.id}`} index={i} key={`${task.id}`} type="task" acceptTypes={["task"]} containerId={`task-container`} item={task}>
+                      <DragDropDraggable key={`${task.id}`} {...draggableProps(task, i)}>
                         <Task key={task.id} index={i}/>
                       </DragDropDraggable>
                   )})

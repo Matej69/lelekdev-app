@@ -15,8 +15,8 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "../tasks/useTasks";
 import { taskColors } from "../tasks/constants";
-import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
-import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
+import { DragDropDroppable, DragDropDroppableProps } from "../../common/drag-drop/DragDropDroppable";
+import { DragDropDraggable, DragDropDraggableProps } from "../../common/drag-drop/DragDropDraggable";
 import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
@@ -57,8 +57,25 @@ export default function Recipe(p: RecipeProps) {
   const onRecipeUpdate = () => { isAnyFieldDirty && recipesActions.updateRecipe(p.recipeIndex);}
   const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.recipeIndex) }
 
+  const droppableSectionProps: Omit<DragDropDroppableProps, 'children'> = {
+    id: `${id}`,
+    type: "recipe-section-container",
+    acceptTypes: ["recipe-section"],
+    items: sections,
+    item: recipe,
+  };
+
+  const draggableSectionProps = (section: { id: string; type: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+    id: section.id,
+    index: index,
+    type: "recipe-section",
+    acceptTypes: ["recipe-section"],
+    containerId: id,
+    item: section,
+  });
+
     return (
-      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300 bg-white" style={containerShadowStyle}>
+      <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
         {/* Header */}
         <div className="flex justify-center p-2" style={{ background: color }}>
           {/* Title */}
@@ -81,10 +98,10 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable id={`${id}`} item={recipe} items={sections} type="recipe-section-container" acceptTypes={["recipe-section"]} style={{ minHeight: '4rem' }}>
+        <DragDropDroppable {...droppableSectionProps} style={{ minHeight: '4rem', background: 'white' }}>
             {
               sections.map((section, sectionIndex) => { return (
-                <DragDropDraggable item={section} id={section.id} containerId={id} index={sectionIndex} type="recipe-section" acceptTypes={["recipe-section"]} key={`${section.id}`}>
+                <DragDropDraggable {...draggableSectionProps(section, sectionIndex)} key={`${section.id}`}>
                   <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
                 </DragDropDraggable>
               )})

@@ -15,8 +15,8 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "./useTasks";
 import { taskColors } from "./constants";
-import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
-import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
+import { DragDropDroppable, DragDropDroppableProps } from "../../common/drag-drop/DragDropDroppable";
+import { DragDropDraggable, DragDropDraggableProps } from "../../common/drag-drop/DragDropDraggable";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 import { createPortal } from "react-dom";
 import { useUserContext } from "../user/userContext/UserContext";
@@ -59,6 +59,23 @@ export default function Task(p: TaskProps) {
   const onTaskUpdate = () => isAnyFieldDirty && taskActions.updateTask(p.index)
   const onTaskCreateItem = () => taskActions.createTaskItem(p.index)
 
+  const droppableProps: Omit<DragDropDroppableProps, 'children'> = {
+    id: `task-item-container-${id}`,
+    type:`task-item-container`,
+    acceptTypes: ["task-item"] ,
+    items: draggableItemIds,
+    item: recipe
+  }
+
+  const draggableProps = (item: {id: string}, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+    id: `task-item-draggable-${item.id}`,
+    index: index,
+    type: "task-item",
+    acceptTypes: ["task-item"],
+    containerId: `task-item-container-${id}`,
+    item: item,
+  });
+
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
         {/* Header */}
@@ -83,10 +100,10 @@ export default function Task(p: TaskProps) {
           </div>
         </div>
         {/* Task items */}
-        <DragDropDroppable id={`task-item-container-${id}`} type={`task-item-container`} acceptTypes={["task-item"]} style={{ minHeight: '4rem' }} items={draggableItemIds} item={recipe}>
+        <DragDropDroppable {...droppableProps} style={{ minHeight: '4rem' , background: 'white' }}>
         {
           items.map((item, i) => { return (
-              <DragDropDraggable id={`task-item-draggable-${item.id}`} index={i} key={`${item.id}`} type="task-item" acceptTypes={["task-item"]} containerId={`task-item-container-${id}`} item={item}>
+              <DragDropDraggable key={`${item.id}`} {...draggableProps(item, i)}>
                 <TaskItem key={item.id} data={item} index={i} taskIndex={p.index}/>
               </DragDropDraggable>
           )})
