@@ -39,7 +39,7 @@ export const DragDropHandlerContext = createContext<{
 
 export function DragDropProvider({ children }: { children: ReactNode })  {
     const moveHandlers = useRef<{ [type: string]: (dragEvent: DragEvent) => void }>({})
-    const [activeItem, setActiveItem] = useState<{title: string | null} | null>(null)
+    const [activeItemSnapshot, setActiveItemSnapshot] = useState<DragStartEvent['active']['data']['current'] | null>(null)
 
     const sensors = useSensors(useSensor(
         PointerSensor, { activationConstraint: { distance: 3 } }
@@ -50,33 +50,32 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
     }
 
     const onDragStart = (event: DragStartEvent) => {
-        const item = event.active.data.current?.item;
-        setActiveItem(item)
+        setActiveItemSnapshot(event.active.data.current)
     }
-
-    const onDragEnd = (event: DragEndEvent) => {
-        setActiveItem(null)
-        const {active, over} = mapEventToDragData(event) || {}
-        if(!active || !over)
-            return;
-        if(active.id === over.id)
-            return;
-        const overAcceptsActive = over.acceptTypes.includes(active.type)
-        if(overAcceptsActive && active.groupId == over.groupId && active.type == over.type && active.index != null && over.index != null) {
-            moveHandlers.current[active.type]?.({active, over})
-        }
-    }
-
+    
     const onDragOver = (event: DragOverEvent) => {
-        const {active, over} = mapEventToDragData(event) || {}
+        const {action, active, over, activeSnapshot} = mapEventToDragData('drag-over', event, activeItemSnapshot) || {}
         if(!active || !over)
             return;
-        if(active.id === over.id)
-            return;
+        //if(active.id === over.id)
+        //    return;
         const overAcceptsActive = over.acceptTypes.includes(active.type)
-        if(overAcceptsActive && active.groupId !== over.groupId && active.index != null) {
-            moveHandlers.current[active.type]?.({active, over})
+        if(overAcceptsActive && action && activeSnapshot && active.groupId !== over.groupId && active.index != null) {
+            moveHandlers.current[active.type]?.({action, active, over, activeSnapshot})
         }
+    }
+    
+    const onDragEnd = (event: DragEndEvent) => {
+        const {action, active, over, activeSnapshot} = mapEventToDragData('drag-end', event, activeItemSnapshot) || {}
+        if(!active || !over)
+            return;
+        // if(active.id === over.id)
+        //     return;
+        const overAcceptsActive = over.acceptTypes.includes(active.type)
+        if(overAcceptsActive && action && activeSnapshot && active.groupId == over.groupId && active.type == over.type && active.index != null && over.index != null) {
+            moveHandlers.current[active.type]?.({action, active, over, activeSnapshot})
+        }
+        setActiveItemSnapshot(null)
     }
 
 

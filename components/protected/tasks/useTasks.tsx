@@ -86,7 +86,7 @@ export const useTasks = () => {
       items = items.filter((el, i) => i != taskItemIndex)
       items = normalizeTaskItemsSortOrder(items)
       form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
-      forceFormDirtiness(form, `recipes.${taskIndex}.sections`)
+      forceFormDirtiness(form, `tasks.${taskIndex}.items`)
     }
 
     const completeTaskItem = (taskIndex: number, taskItemIndex: number) => {
@@ -105,56 +105,81 @@ export const useTasks = () => {
           } as TaskItemModel
     }
 
+    /**
+     * Garbage function
+     * Should be separated on moveTaskItemInside and dropTaskItem - movement task item through tasks and droppng task item on task
+     * Also means there should be 2 registrations for drag-over and drag-end events - probably 1 objects with 2 
+     * @param dragEvent 
+     */
     const moveTaskItem = (dragEvent: DragEvent): void => {
-      const { active, over } = dragEvent
+      const { active, over, activeSnapshot } = dragEvent
+      //if(active.id === over.id)
+      //      return;
       const [activeId, overId] = [idFromDragDropId(active.id), idFromDragDropId(over.id || '')]
       const [activeGroupId, overGroupId] = [idFromDragDropId(active.groupId), idFromDragDropId(over.groupId || '')]
-      const isDraggingRecipeTask = active.type === 'task-item'
       const overEmptyContainer = form.getValues(`tasks`).find(r => r.id == overId)?.items?.length == 0
       const dragState = {
         sameContainer: activeGroupId === overGroupId ? 'SAME' : 'DIFFERENT',
         draggedTo: active.type !== over.type && overEmptyContainer ? 'EMPTY_CONTAINER' : 'NON_EMPTY_CONTAINER'
       } as const
-      // Dragged to another position in same task
-      if(dragState.sameContainer === 'SAME' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
-        const taskIndex = form.getValues(`tasks`).findIndex(r => overGroupId == idFromDragDropId(r.id))
-        const task = {...form.getValues(`tasks.${taskIndex}`)}
-        if(over.index != null) {
-          task.items = moveInCollection(task.items || [], active.index, over.index)
-          form.setValue(`tasks.${taskIndex}.items`, task.items, { shouldDirty: true })
+      console.log(dragState.sameContainer, dragState.draggedTo, dragEvent)
+      if(active.id !== over.id) {
+        // Dragged to another position in same task
+        if(dragState.sameContainer === 'SAME' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
+          const taskIndex = form.getValues(`tasks`).findIndex(r => overGroupId == idFromDragDropId(r.id))
+          const task = {...form.getValues(`tasks.${taskIndex}`)}
+          if(over.index != null) {
+            task.items = moveInCollection(task.items || [], active.index, over.index)
+            const shouldDirty = activeGroupId === activeSnapshot.groupId // Dirty if item originated from same container
+            form.setValue(`tasks.${taskIndex}.items`, task.items, { shouldDirty })
+          }
+        }
+        // Sort goes to negative for osme reason and cant be saved, 
+        if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
+          const tasks = [...form.getValues('tasks')]
+          const activeTask = tasks.find(r => r.id == activeGroupId)
+          const overTask = tasks.find(r => r.id == overGroupId)
+          if(activeTask?.items && overTask?.items && activeTask.items.length > active.index && overGroupId && over.index != null) {
+            moveAcrossCollections(
+              activeTask.items, active.index,
+              overTask.items, over.index,
+              (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
+            )
+            const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
+            //forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
+            form.setValue('tasks', tasks,)
+          }
+        }
+        else if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'EMPTY_CONTAINER') {
+          const tasks = [...form.getValues('tasks')]
+          const activeTask = tasks.find(r => r.id == activeGroupId)
+          const overTask = tasks.find(r => r.id == overId)
+          if(activeTask?.items && overTask?.items && activeTask.items.length > active.index) {
+            moveAcrossCollections(
+              activeTask.items, active.index,
+              overTask.items, 0,
+              (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
+            )
+            const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
+            //forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
+            form.setValue('tasks', tasks)
+          }
         }
       }
-      // Sort goes to negative for osme reason and cant be saved, 
-      if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'NON_EMPTY_CONTAINER') {
-        const tasks = [...form.getValues('tasks')]
-        const activeTask = tasks.find(r => r.id == activeGroupId)
+      // If item is moved cross container - we automatically save since its weird to manually save both containers when item move
+      // At point of drag end, active and over item will be the same
+      // ''
+      const differentContainerFromSnapshot = activeGroupId !== activeSnapshot.groupId 
+      if(dragEvent.action == 'drag-end' && differentContainerFromSnapshot) {
+        const tasks = form.getValues('tasks')
+        const activeTask = tasks.find(r => r.id == dragEvent.activeSnapshot.groupId)
         const overTask = tasks.find(r => r.id == overGroupId)
-        if(activeTask?.items && overTask?.items && activeTask.items.length > active.index && overGroupId && over.index != null) {
-          moveAcrossCollections(
-            activeTask.items, active.index,
-            overTask.items, over.index,
-            (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
-          )
-          const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
-          forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
-          form.setValue('tasks', tasks, {shouldDirty: true})
+        if(activeTask && overTask) {
+          tasksApi.update.mutate(activeTask)
+          tasksApi.update.mutate(overTask)
         }
       }
-      else if(dragState.sameContainer === 'DIFFERENT' && dragState.draggedTo === 'EMPTY_CONTAINER') {
-        const tasks = [...form.getValues('tasks')]
-        const activeTask = tasks.find(r => r.id == activeGroupId)
-        const overTask = tasks.find(r => r.id == overId)
-        if(activeTask?.items && overTask?.items && activeTask.items.length > active.index) {
-          moveAcrossCollections(
-            activeTask.items, active.index,
-            overTask.items, 0,
-            (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
-          )
-          const activeTaskIndex = tasks.findIndex(r => r.id == activeGroupId)
-          forceFormDirtiness(form, `tasks.${activeTaskIndex}`)
-          form.setValue('tasks', tasks, {shouldDirty: true})
-        }
-      }
+      
     }
 
     return {

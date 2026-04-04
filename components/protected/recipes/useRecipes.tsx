@@ -176,7 +176,6 @@ export const useRecipes = () => {
         groupEquality: active.groupId === over.groupId ? 'SAME' : 'DIFFERENT',
         draggedTo: active.type !== over.type && overEmptyContainer ? 'EMPTY_CONTAINER' : 'NON_EMPTY_CONTAINER'
       } as const
-
       // Dragged to another position within same recipe
       if(dragState.groupEquality == 'SAME' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
         const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
