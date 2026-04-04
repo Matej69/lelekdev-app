@@ -69,7 +69,7 @@ export const useTasks = () => {
       const tasks = form?.getValues(`tasks`)
       if(over.index != null) {
         let newRecipes = moveInCollection(tasks, active.index, over.index)
-        form.setValue(`tasks`, newRecipes, { shouldDirty: true })
+        form.setValue(`tasks`, newRecipes)
         tasksApi.update.mutate(newRecipes[over.index])
       }
     }
