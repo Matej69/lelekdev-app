@@ -56,16 +56,14 @@ export const useTasks = () => {
     };
 
     const moveTask = (dragEvent: DragEvent): void => {
-      const { dragged: active, target: over } = dragEvent
-      const isDraggingTask = active.type === 'task'
-      const draggingInsideSameContainer = !isDraggingTask || active.groupId !== over.groupId 
-      if(draggingInsideSameContainer)
+      const { dragged, target } = dragEvent
+      if(dragged.type !== 'task' || target.type !== 'task')
         return;
       const tasks = form?.getValues(`tasks`)
-      if(over.index != null) {
-        let newRecipes = moveInCollection(tasks, active.index, over.index)
+      if(target.index != null) {
+        let newRecipes = moveInCollection(tasks, dragged.index, target.index)
         form.setValue(`tasks`, newRecipes)
-        tasksApi.update.mutate(newRecipes[over.index])
+        tasksApi.update.mutate(newRecipes[target.index])
       }
     }
 
@@ -106,52 +104,35 @@ export const useTasks = () => {
     }
 
     /**
-     * Garbage function
-     * Should be separated on moveTaskItemInside and dropTaskItem - movement task item through tasks and droppng task item on task
-     * Also means there should be 2 registrations for drag-over and drag-end events - probably 1 objects with 2 
-     * 'overEmptyContainer' calculationacan be exposed as lambda and assigned during registration so it can be put into dragEvent and be prepared for move and drop functions
+     * 
      * @param dragEvent 
      */
     const moveTaskItem = (dragEvent: DragEvent): void => {
       const { dragged, target, activeSnapshot, draggedOn } = dragEvent
+      if(dragged.type != 'task-item' || !['task-itemx', 'task-item-containerx'].some(s => s.includes(target.type)) )
+        return;
+      const tasks = [...form.getValues('tasks')]
+      // Dragged to different task
       if(dragEvent.action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
-        const containerId = draggedOn.container ? target.id : target.groupId
-        const targetContainer = form.getValues(`tasks`).find(r => r.id == containerId)
-        const targetContainerEmpty = targetContainer?.items?.length == 0
-        // Drag over empty container
-        if(targetContainerEmpty) {
-          const tasks = [...form.getValues('tasks')]
-          const draggedTask = tasks.find(r => r.id == dragged.groupId)
-          const targetTask = tasks.find(r => r.id == target.id)
-          if(draggedTask?.items && targetTask?.items && draggedTask.items.length > dragged.index) {
-            moveAcrossCollections(
-              draggedTask.items, dragged.index,
-              targetTask.items, 0,
-              (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
-            )
-            form.setValue('tasks', tasks)
-          }
-        }
-        // Drag over non empty container
-        if(!targetContainerEmpty) {
-          const tasks = [...form.getValues('tasks')]
-          const draggedTask = tasks.find(r => r.id == dragged.groupId)
-          const targetTask = tasks.find(r => r.id == target.groupId)
-          if(draggedTask?.items && targetTask?.items && draggedTask.items.length > dragged.index && target.groupId && target.index != null) {
-            moveAcrossCollections(
-              draggedTask.items, dragged.index,
-              targetTask.items, target.index,
-              (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
-            )
-            form.setValue('tasks', tasks)
-          }
+        const targetTaskId = draggedOn.container ? target.id : target.groupId
+        const targetTask = tasks.find(r => r.id == targetTaskId)
+        const draggedTask = tasks.find(r => r.id == dragged.groupId)
+        const targetContainerEmpty = targetTask?.items?.length == 0
+        const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
+        if(draggedTask?.items && targetTask?.items && draggedTask.items.length > dragged.index && indexToMoveItemTo != null) {
+          moveAcrossCollections(
+            draggedTask.items, dragged.index,
+            targetTask.items, indexToMoveItemTo,
+            (itemToMove) => newShallowCopyItemFromExisting(itemToMove)
+          )
+          form.setValue('tasks', tasks)
         }
       }
       else if(dragEvent.action == 'drag-end') {
         // Dragged to another position in same task
-        if(draggedOn.sameContainer && !draggedOn.sameItem /*&& draggedToContainer === 'NON_EMPTY_CONTAINER'*/) {
-          const taskIndex = form.getValues(`tasks`).findIndex(r => target.groupId == r.id)
-          const task = {...form.getValues(`tasks.${taskIndex}`)}
+        if(draggedOn.sameContainer && !draggedOn.sameItem) {
+          const taskIndex = tasks.findIndex(r => target.groupId == r.id)
+          const task = {...tasks[taskIndex]}
           if(target.index != null) {
             task.items = moveInCollection(task.items || [], dragged.index, target.index)
             const shouldDirty = dragged.groupId === activeSnapshot.groupId
@@ -161,7 +142,6 @@ export const useTasks = () => {
         // Item moved to different container - automatically save since its weird to manually save both containers when item moves
         const differentContainerFromSnapshot = dragged.groupId !== activeSnapshot.groupId 
         if(differentContainerFromSnapshot) {
-          const tasks = form.getValues('tasks')
           const originTask = tasks.find(r => r.id == dragEvent.activeSnapshot.groupId)
           const overTaskId = target.type == 'task-item' ? target.groupId : target.id 
           const overTask = tasks.find(r => r.id == overTaskId)
