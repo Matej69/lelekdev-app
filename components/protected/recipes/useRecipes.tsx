@@ -95,7 +95,7 @@ export const useRecipes = () => {
     }
 
     const moveRecipe = (dragEvent: DragEvent) => {
-      const { active, over } = dragEvent
+      const { dragged: active, target: over } = dragEvent
       const isDraggingRecipe = active.type === 'recipe'
       const draggingInsideSameContainer = !isDraggingRecipe || active.groupId !== over.groupId 
       if(draggingInsideSameContainer)
@@ -166,7 +166,7 @@ export const useRecipes = () => {
     }
 
     const moveRecipeSection = (dragEvent: DragEvent) => {
-      const { active, over } = dragEvent
+      const { dragged: active, target: over } = dragEvent
       const isDraggingSection = active.type === 'recipe-section'
       const isDropLocationSectionOrSectionItem = over.type === 'recipe-section' || over.type === 'recipe-section-container'  
       if(!isDraggingSection || !isDropLocationSectionOrSectionItem)

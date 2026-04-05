@@ -53,28 +53,48 @@ export function DragDropProvider({ children }: { children: ReactNode })  {
         setActiveItemSnapshot(event.active.data.current)
     }
     
+    /**
+     * Triggered once when item is dragged over different container that accept that item type
+     * Should not be used to mutate state on abckend by calling api since drag end confirms changes to backend. Drag over jus changes app state, does not commits it untill drag ends
+     * * Used for:
+     *  1. Different container drag  - applies state immediately on enter
+     * Every movement of dragged item after it was moved to new section will not trigger another drag over event, instead, library itself will visually move it arorund
+     * @param event 
+     * @returns 
+     */
     const onDragOver = (event: DragOverEvent) => {
-        const {action, active, over, activeSnapshot} = mapEventToDragData('drag-over', event, activeItemSnapshot) || {}
-        if(!active || !over)
-            return;
-        //if(active.id === over.id)
-        //    return;
-        const overAcceptsActive = over.acceptTypes.includes(active.type)
-        if(overAcceptsActive && action && activeSnapshot && active.groupId !== over.groupId && active.index != null) {
-            moveHandlers.current[active.type]?.({action, active, over, activeSnapshot})
+        const dragData = mapEventToDragData('drag-over', event, activeItemSnapshot)
+        if(!dragData) return;
+        const {action, dragged: active, target: over, activeSnapshot} = dragData
+        if(!action || !active || !over || !activeSnapshot || active.index == null) return;
+        const activeTypeAccepted = over.acceptTypes.includes(active.type)
+        const dragToDifferentContainer = active.groupId !== over.groupId
+        if(activeTypeAccepted && dragToDifferentContainer) {
+            moveHandlers.current[active.type]?.(dragData)
         }
     }
     
+    /**
+     * Triggers when dragged item is released - applies state, calls api to save changes for cross container move
+     * Used for:
+     *  1. Same container drag - Updates state and can call api to immediately apply on backend
+     *  2. Different container drag - apply change to state
+     * Takes in consideration 3 main entities: 
+     *  1. dragged item snapshot(before drag started) -> used on cross container dragging to apply state(dragged item is not enough since its already moved to new container)
+     *  2. current dragged(active) item, 
+     *  3. current target item(over, can be container or item itself)
+     * @param event 
+     * @returns 
+     */
     const onDragEnd = (event: DragEndEvent) => {
-        const {action, active, over, activeSnapshot} = mapEventToDragData('drag-end', event, activeItemSnapshot) || {}
-        if(!active || !over)
-            return;
-        // if(active.id === over.id)
-        //     return;
-        const overAcceptsActive = over.acceptTypes.includes(active.type)
-        if(overAcceptsActive && action && activeSnapshot && active.groupId == over.groupId && active.type == over.type && active.index != null && over.index != null) {
-            moveHandlers.current[active.type]?.({action, active, over, activeSnapshot})
-        }
+        const dragData = mapEventToDragData('drag-end', event, activeItemSnapshot)
+        //console.log(dragData)
+        if(!dragData) return;
+        const {action, dragged: active, target: over, activeSnapshot} = dragData
+        if(!action || !active || !over || !activeSnapshot) return;
+        const activeTypeAccepted = over.acceptTypes.includes(active.type)
+        if(activeTypeAccepted)
+            moveHandlers.current[active.type]?.(dragData)
         setActiveItemSnapshot(null)
     }
 
