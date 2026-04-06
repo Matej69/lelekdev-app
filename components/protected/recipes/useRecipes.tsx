@@ -95,10 +95,10 @@ export const useRecipes = () => {
     }
 
     const moveRecipe = (dragEvent: DragEvent) => {
-      console.log(dragEvent.dragged.type, dragEvent.target.type)
       const { dragged, target, draggedOn } = dragEvent
-      const sameContainerRecipeToRecipeDrag = dragged.type == 'recipe' && draggedOn.sameType && draggedOn.sameContainer 
-      if(!sameContainerRecipeToRecipeDrag)
+      const isDraggingRecipe = dragged.type == 'recipe'
+      const isDraggingToRecipe = target.type == 'recipe'
+      if(!isDraggingRecipe || !isDraggingToRecipe || !draggedOn.sameContainer)
         return;
       if(target.index == null)
         return;
@@ -160,66 +160,59 @@ export const useRecipes = () => {
       return {
             ...section,
             isNew: true,
-            recipeId: recipeId, 
+            recipeId, 
             ...(section?.type === 'INGREDIENTS' && { ingredients: section.ingredients.map(ingr => ({...ingr, isNew: true}))})
           } as RecipeSectionModel
     }
 
     const moveRecipeSection = (dragEvent: DragEvent) => {
-      console.log(dragEvent.dragged.type, dragEvent.target.type)
-      const { dragged: active, target: over } = dragEvent
-      const isDraggingSection = active.type === 'recipe-section'
-      const isDropLocationSectionOrSectionItem = over.type === 'recipe-section' || over.type === 'recipe-section-container'  
-      if(!isDraggingSection || !isDropLocationSectionOrSectionItem)
+      const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
+      const types = {
+        item: 'recipe-section',
+        container: 'recipe-section-container'
+      }
+      const isDraggingRecipeSection = dragged.type == types.item
+      const isDraggingToItemOrContainer = [types.item, types.container].includes(target.type)
+      if(!isDraggingRecipeSection || !isDraggingToItemOrContainer)
         return;
-      const overEmptyContainer = form.getValues(`recipes`).find(r => r.id == over.id)?.sections?.length == 0
-      const dragState = {
-        groupEquality: active.groupId === over.groupId ? 'SAME' : 'DIFFERENT',
-        draggedTo: active.type !== over.type && overEmptyContainer ? 'EMPTY_CONTAINER' : 'NON_EMPTY_CONTAINER'
-      } as const
-      // Dragged to another position within same recipe
-      if(dragState.groupEquality == 'SAME' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
-        const recipe = {...form.getValues(`recipes`).find(r => r.id == over.groupId)}
-        if(recipe.sections && over.index != null) {
-          console.log("Over id:", over.groupId)
-          const newSections = moveInCollection(recipe.sections, active.index, over.index)
-          const recipeIndex = form.getValues(`recipes`).findIndex(r => r.id == over.groupId)
-          form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      const recipes = [...form.getValues('recipes')]
+      // Dragged to different container
+      if(action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
+        const targetRecipeId = draggedOn.container ? target.id : target.groupId
+        const targetRecipe = recipes.find(r => r.id == targetRecipeId)
+        const draggedRecipe = recipes.find(r => r.id == dragged.groupId)
+        const targetContainerEmpty = targetRecipe?.sections?.length == 0
+        const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
+        if(draggedRecipe?.sections && targetRecipe?.sections && draggedRecipe.sections.length > dragged.index && indexToMoveItemTo != null) {
+          moveAcrossCollections(
+            draggedRecipe.sections, dragged.index,
+            targetRecipe.sections, indexToMoveItemTo,
+            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, targetRecipe.id)
+          )
+          form.setValue('recipes', recipes)
         }
       }
-      // Dragged to another recipe with at least one section
-      else if(dragState.groupEquality == 'DIFFERENT' && dragState.draggedTo == 'NON_EMPTY_CONTAINER') {
-        const recipes = [...form.getValues('recipes')]
-        const activeRecipe = recipes.find(r => r.id == active.groupId)
-        const overRecipe = recipes.find(r => r.id == over.groupId)
-        if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index && over.groupId && over.index != null) {
-          //activeRecipe.sections[active.index].recipeId = over.groupId
-          console.log("Over id:", over.groupId)
-          moveAcrossCollections(
-            activeRecipe.sections, active.index,
-            overRecipe.sections, over.index,
-            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, over.groupId!)
-          )
-          const activeRecipeIndex = recipes.findIndex(r => r.id == active.groupId)
-          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`)
-          form.setValue('recipes', recipes, {shouldDirty: true})
+      else if(action == 'drag-end') {
+        // Dragged in same container
+        if(draggedOn.sameContainer && !draggedOn.sameItem) {
+          const recipeIndex = recipes.findIndex(r => target.groupId == r.id)
+          const recipe = {...recipes[recipeIndex]}
+          if(target.index != null) {
+            recipe.sections = moveInCollection(recipe.sections || [], dragged.index, target.index)
+            const shouldDirty = dragged.groupId === activeSnapshot.groupId
+            form.setValue(`recipes.${recipeIndex}.sections`, recipe.sections, { shouldDirty })
+          }
         }
-      }
-      // Dragged to another recipe with no sections
-      else if (dragState.groupEquality == 'DIFFERENT' && dragState.draggedTo == 'EMPTY_CONTAINER') {
-        const recipes = [...form.getValues('recipes')]
-        const activeRecipe = recipes.find(r => r.id == active.groupId)
-        const overRecipe = recipes.find(r => r.id == over.id)
-        if(activeRecipe?.sections && overRecipe?.sections && activeRecipe.sections.length > active.index) {
-          activeRecipe.sections[active.index].recipeId = over.id
-          moveAcrossCollections(
-            activeRecipe.sections, active.index,
-            overRecipe.sections, 0,
-            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, over.id!)
-          )
-          const activeRecipeIndex = recipes.findIndex(r => r.id == active.groupId)
-          forceFormDirtiness(form, `recipes.${activeRecipeIndex}`)
-          form.setValue('recipes', recipes, {shouldDirty: true})
+        // Dragged to different container - commit changes - automatically save since its weird to manually save both containers when item moves
+        const differentContainerFromSnapshot = dragged.groupId !== activeSnapshot.groupId 
+        if(differentContainerFromSnapshot) {
+          const originRecipe = recipes.find(r => r.id == dragEvent.activeSnapshot.groupId)
+          const overRecipeId = target.type == types.item ? target.groupId : target.id 
+          const overRecipe = recipes.find(r => r.id == overRecipeId)
+          if(originRecipe && overRecipe) {
+            recipesApi.updateRecipe.mutate(originRecipe)
+            recipesApi.updateRecipe.mutate(overRecipe)
+          }
         }
       }
     }

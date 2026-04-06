@@ -56,15 +56,17 @@ export const useTasks = () => {
     };
 
     const moveTask = (dragEvent: DragEvent): void => {
-      const { dragged, target } = dragEvent
-      if(dragged.type !== 'task' || target.type !== 'task')
+      const { dragged, target, draggedOn } = dragEvent
+      const isDraggingTask = dragged.type == 'task'
+      const isDraggingToTask = target.type == 'task'
+      if(!isDraggingTask || !isDraggingToTask || !draggedOn.sameContainer)
+        return;
+      if(target.index == null)
         return;
       const tasks = form?.getValues(`tasks`)
-      if(target.index != null) {
-        let newRecipes = moveInCollection(tasks, dragged.index, target.index)
-        form.setValue(`tasks`, newRecipes)
-        tasksApi.update.mutate(newRecipes[target.index])
-      }
+      let newTasks = moveInCollection(tasks, dragged.index, target.index)
+      form.setValue(`tasks`, newTasks)
+      tasksApi.update.mutate(newTasks[target.index])
     }
 
     const createTaskItem = (taskIndex: number) => { 
@@ -108,12 +110,18 @@ export const useTasks = () => {
      * @param dragEvent 
      */
     const moveTaskItem = (dragEvent: DragEvent): void => {
-      const { dragged, target, activeSnapshot, draggedOn } = dragEvent
-      if(dragged.type != 'task-item' || !['task-item', 'task-item-container'].some(s => s.includes(target.type)) )
+      const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
+      const types = {
+        item: 'task-item',
+        container: 'task-item-container'
+      }
+      const isDraggingTaskItem = dragged.type == types.item
+      const isDraggingToItemOrContainer = [types.item, types.container].includes(target.type)
+      if(!isDraggingTaskItem || !isDraggingToItemOrContainer)
         return;
       const tasks = [...form.getValues('tasks')]
-      // Dragged to different task
-      if(dragEvent.action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
+      // Dragged to different container
+      if(action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
         const targetTaskId = draggedOn.container ? target.id : target.groupId
         const targetTask = tasks.find(r => r.id == targetTaskId)
         const draggedTask = tasks.find(r => r.id == dragged.groupId)
@@ -128,8 +136,8 @@ export const useTasks = () => {
           form.setValue('tasks', tasks)
         }
       }
-      else if(dragEvent.action == 'drag-end') {
-        // Dragged to another position in same task
+      else if(action == 'drag-end') {
+        // Dragged in same container
         if(draggedOn.sameContainer && !draggedOn.sameItem) {
           const taskIndex = tasks.findIndex(r => target.groupId == r.id)
           const task = {...tasks[taskIndex]}
@@ -139,11 +147,11 @@ export const useTasks = () => {
             form.setValue(`tasks.${taskIndex}.items`, task.items, { shouldDirty })
           }
         }
-        // Item moved to different container - automatically save since its weird to manually save both containers when item moves
+        // Dragged to different container - commit changes - automatically save since its weird to manually save both containers when item moves
         const differentContainerFromSnapshot = dragged.groupId !== activeSnapshot.groupId 
         if(differentContainerFromSnapshot) {
           const originTask = tasks.find(r => r.id == dragEvent.activeSnapshot.groupId)
-          const overTaskId = target.type == 'task-item' ? target.groupId : target.id 
+          const overTaskId = target.type == types.item ? target.groupId : target.id 
           const overTask = tasks.find(r => r.id == overTaskId)
           if(originTask && overTask) {
             tasksApi.update.mutate(originTask)
