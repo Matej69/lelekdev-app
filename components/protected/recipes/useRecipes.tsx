@@ -95,17 +95,17 @@ export const useRecipes = () => {
     }
 
     const moveRecipe = (dragEvent: DragEvent) => {
-      const { dragged: active, target: over } = dragEvent
-      const isDraggingRecipe = active.type === 'recipe'
-      const draggingInsideSameContainer = !isDraggingRecipe || active.groupId !== over.groupId 
-      if(draggingInsideSameContainer)
+      console.log(dragEvent.dragged.type, dragEvent.target.type)
+      const { dragged, target, draggedOn } = dragEvent
+      const sameContainerRecipeToRecipeDrag = dragged.type == 'recipe' && draggedOn.sameType && draggedOn.sameContainer 
+      if(!sameContainerRecipeToRecipeDrag)
+        return;
+      if(target.index == null)
         return;
       const recipes = form?.getValues(`recipes`)
-      if(over.index != null) {
-        let newRecipes = moveInCollection(recipes, active.index, over.index)
-        form.setValue(`recipes`, newRecipes)
-        recipesApi.updateRecipe.mutate(newRecipes[over.index])
-      }
+      let newRecipes = moveInCollection(recipes, dragged.index, target.index)
+      form.setValue(`recipes`, newRecipes)
+      recipesApi.updateRecipe.mutate(newRecipes[target.index])
     }
 
     const createRecipeSection = (recipeIndex: number) => {
@@ -166,6 +166,7 @@ export const useRecipes = () => {
     }
 
     const moveRecipeSection = (dragEvent: DragEvent) => {
+      console.log(dragEvent.dragged.type, dragEvent.target.type)
       const { dragged: active, target: over } = dragEvent
       const isDraggingSection = active.type === 'recipe-section'
       const isDropLocationSectionOrSectionItem = over.type === 'recipe-section' || over.type === 'recipe-section-container'  
