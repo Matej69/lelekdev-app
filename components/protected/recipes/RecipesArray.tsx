@@ -58,8 +58,8 @@ export const RecipesArray = (p: RecipesArrayProps) => {
             { addTaskPortal }
             {
               recipes?.map((recipe, i) => { return (
-                <DragDropDraggable key={`recipe-${recipe.id}`} {...draggableRecipeProps(recipe, i)}>
-                  <Recipe key={`${recipe.id}-${i}`} recipeIndex={i}></Recipe>
+                <DragDropDraggable key={`${recipe.id}-${i}`} {...draggableRecipeProps(recipe, i)}>
+                  <Recipe recipeIndex={i}></Recipe>
                 </DragDropDraggable>
               )})
             }  

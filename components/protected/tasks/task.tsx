@@ -103,8 +103,8 @@ export default function Task(p: TaskProps) {
         <DragDropDroppable {...droppableProps} style={{ minHeight: '4rem' , background: 'white' }}>
         {
           items.map((item, i) => { return (
-              <DragDropDraggable key={`${item.id}`} {...draggableProps(item, i)}>
-                <TaskItem key={item.id} data={item} index={i} taskIndex={p.index}/>
+              <DragDropDraggable key={`${item.id}-${i}`} {...draggableProps(item, i)}>
+                <TaskItem data={item} index={i} taskIndex={p.index}/>
               </DragDropDraggable>
           )})
         }

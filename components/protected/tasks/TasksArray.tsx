@@ -53,8 +53,8 @@ export const TasksArray = () => {
             <DragDropDroppable {...droppableProps} style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
                 {
                   tasks.map((task, i) => { return (
-                      <DragDropDraggable key={`${task.id}`} {...draggableProps(task, i)}>
-                        <Task key={task.id} index={i}/>
+                      <DragDropDraggable key={`${task.id}-${i}`} {...draggableProps(task, i)}>
+                        <Task index={i}/>
                       </DragDropDraggable>
                   )})
                 }

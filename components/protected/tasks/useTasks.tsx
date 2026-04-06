@@ -109,7 +109,7 @@ export const useTasks = () => {
      */
     const moveTaskItem = (dragEvent: DragEvent): void => {
       const { dragged, target, activeSnapshot, draggedOn } = dragEvent
-      if(dragged.type != 'task-item' || !['task-itemx', 'task-item-containerx'].some(s => s.includes(target.type)) )
+      if(dragged.type != 'task-item' || !['task-item', 'task-item-container'].some(s => s.includes(target.type)) )
         return;
       const tasks = [...form.getValues('tasks')]
       // Dragged to different task
