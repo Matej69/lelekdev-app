@@ -8,6 +8,7 @@ export const RecipeSchema = z.object({
   color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Invalid hex color"),
   sortOrder: z.number().min(1),
   sections: z.array(RecipeSectionSchema).default([]),
+  isNew: z.boolean().default(false)
 })
 
 export type RecipeModel = z.infer<typeof RecipeSchema>

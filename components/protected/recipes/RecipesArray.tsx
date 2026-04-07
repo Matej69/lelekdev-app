@@ -1,0 +1,70 @@
+import { DragDropDraggable, DragDropDraggableProps } from '@/components/common/drag-drop/DragDropDraggable';
+import { DragDropDroppable, DragDropDroppableProps } from '@/components/common/drag-drop/DragDropDroppable';
+import { DragDropHandlerContext } from '@/components/common/drag-drop/DragDropProvider';
+import { safeCreatePortal } from '@/components/common/utils';
+import Recipe from '@/components/protected/recipes/recipe';
+import { RecipeModel } from '@/components/protected/recipes/recipe-model';
+import { useRecipes } from '@/components/protected/recipes/useRecipes';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
+import { CopyPlus } from 'lucide-react';
+import React, { ReactPortal, useContext, useEffect, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
+
+interface RecipesArrayProps {
+    
+}
+
+export const RecipesArray = (p: RecipesArrayProps) => {
+
+    const recipesActions = useRecipes()
+    
+    const form = useFormContext<{recipes: RecipeModel[]}>()
+    const recipes = form.watch("recipes")
+
+
+    const dragDropContext = useContext(DragDropHandlerContext)
+    const [addTaskPortal, setAddTaskPortal] = useState<ReactPortal | null>(null) 
+
+    useEffect(() => {
+        dragDropContext.registerHandler(`recipe`, recipesActions.moveRecipe)
+        const portal = safeCreatePortal(
+          <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={recipesActions.createRecipe} />, 
+          'add-recipe-placeholder'
+      ) 
+      setAddTaskPortal(portal)
+    }, [])
+
+    const droppableItemIds = recipes?.map(r => ({ id: `recipe-draggable-${r.id}` })) || []
+
+    const droppableRecipeProps: Omit<DragDropDroppableProps, 'children'> = {
+      id: 'recipe-container',
+      type: 'recipe-container',
+      acceptTypes: ["recipe"],
+      items: droppableItemIds,
+      item: {},
+    };
+
+    const draggableRecipeProps = (recipe: { id: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+      id: `recipe-draggable-${recipe.id}`,
+      index: index,
+      type: "recipe",
+      acceptTypes: ["recipe"],
+      containerId: "recipe-container",
+      item: recipe,
+    });
+
+    return (
+        <DragDropDroppable {...droppableRecipeProps} style={{ display: 'flex', flexDirection: 'column', gap: 16, minHeight: '4rem' }}>
+            { addTaskPortal }
+            {
+              recipes?.map((recipe, i) => { return (
+                <DragDropDraggable key={`${recipe.id}-${i}`} {...draggableRecipeProps(recipe, i)}>
+                  <Recipe recipeIndex={i}></Recipe>
+                </DragDropDraggable>
+              )})
+            }  
+        </DragDropDroppable>
+    )
+}
+
+

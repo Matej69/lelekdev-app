@@ -1,24 +1,26 @@
 'use client';
 
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
-import { DragDropHandlerContext } from "@/app/DragDropProvider";
-import Skeleton from "@/components/common/Skeleton/skeleton";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
+import ContentLoadingSkeleton from "@/components/common/Skeleton/content-loading-skeleton";
 import { generateTrackingId } from "@/components/common/utils";
-import { TaskModel } from "@/components/protected/tasks/model";
+import { TaskModel, TaskSchema } from "@/components/protected/tasks/model";
 import Task from "@/components/protected/tasks/task";
 import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
-import { createTask } from "@/components/protected/tasks/useTasks";
+import { TasksArray } from "@/components/protected/tasks/TasksArray";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
-import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CopyPlus } from "lucide-react";
 import { useContext, useEffect } from "react";
+import { Resolver, useForm } from "react-hook-form";
+import { z } from 'zod'
 
 const Loading = () => {
   return(
     <div className="flex flex-col gap-4">
-      <Skeleton/>
-      <Skeleton/>
-      <Skeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
     </div>
   )
 }
@@ -26,29 +28,27 @@ const Loading = () => {
 export default function TasksPage() {
   //const taskData = mockTasks
   const { id: userId } = useUserContext()
-  const taskService = useTasksApi(userId)
-  
-  if (taskService.get.isLoading)
-    return <Loading/>;
-  
-  const tasks = taskService.get.data || [];
+  const taskApi = useTasksApi(userId)
 
-  const onCreate = () => createTask(userId, tasks, taskService.create.mutate)
+  const form = useForm<{ tasks: TaskModel[] }>({
+    resolver: zodResolver(z.object({ tasks: z.array(TaskSchema) })) as Resolver<{ tasks: TaskModel[] }>,
+    defaultValues: { tasks: [] }
+  });
+  
+  const tasks = taskApi.get(userId, (data) => { form.reset({ tasks: data }) } )
+  if (tasks.isLoading)
+    return <Loading/>;
+
 
   return (
     <div className="flex flex-col h-full font-sans gap-6">
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Tasks</h1>
-        <CopyPlus size={48} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={onCreate} />
+        <div id="add-task-placeholder"></div>
       </div>
-      {/* Task list */}
-      {
-        tasks.map((task) =>  
-          <TaskFormProvider key={`provider-${task.id}`} defaultValues={task}>
-            <Task key={task.id} taskService={taskService}/>
-          </TaskFormProvider>
-        )
-      }
+        <TaskFormProvider form={form}>
+          <TasksArray/>
+        </TaskFormProvider>
     </div>
   );
 }

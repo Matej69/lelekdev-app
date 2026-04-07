@@ -9,6 +9,7 @@ export const TaskSchema = z.object({
   ownerId: z.string(),
   sortOrder: z.number().min(1),
   items: z.array(TaskItemSchema).default([]),
+  isNew: z.boolean().default(false)
 });
 
 export type TaskModel = z.infer<typeof TaskSchema>;

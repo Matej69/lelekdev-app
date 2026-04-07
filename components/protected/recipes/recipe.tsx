@@ -15,13 +15,13 @@ import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "../tasks/useTasks";
 import { taskColors } from "../tasks/constants";
-import { DragDropContext } from "@hello-pangea/dnd";
-import { DragDropDroppable } from "../../common/drag-drop/DragDropDroppable";
-import { DragDropDraggable } from "../../common/drag-drop/DragDropDraggable";
+import { DragDropDroppable, DragDropDroppableProps } from "../../common/drag-drop/DragDropDroppable";
+import { DragDropDraggable, DragDropDraggableProps } from "../../common/drag-drop/DragDropDraggable";
 import { RecipeModel } from "./recipe-model";
 import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
-import { DragDropHandlerContext } from "@/app/DragDropProvider";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
+import { useDndMonitor } from "@dnd-kit/core";
 
 
 interface RecipeProps {
@@ -31,6 +31,7 @@ interface RecipeProps {
 export default function Recipe(p: RecipeProps) {
   const recipesActions = useRecipes()
   const form = useFormContext<{recipes: RecipeModel[]}>()
+  const recipe = form.getValues(`recipes.${p.recipeIndex}`) 
   const [id, name, color, sections] = useWatch({
     control: form.control,
     name: [
@@ -40,22 +41,38 @@ export default function Recipe(p: RecipeProps) {
       `recipes.${p.recipeIndex}.sections`
     ],
   });
-  const errorMessages = form.formState.errors.recipes?.[p.recipeIndex]
+  const errors = form.formState.errors.recipes?.[p.recipeIndex]
 
   const recipeDirtyFields = form.formState.dirtyFields.recipes?.[p.recipeIndex]
   const isAnyFieldDirty = recipeDirtyFields ? Object.keys(recipeDirtyFields).length > 0 : false;
-    
+  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
+
   const dragDropContext = useContext(DragDropHandlerContext)
   useEffect(() => {
     dragDropContext.registerHandler(`recipe-section`, recipesActions.moveRecipeSection)
   }, [])
 
-  const containerShadowStyle: CSSProperties = { boxShadow: `4px 4px 0 ${isAnyFieldDirty ? "#ccc" : "black"}` }
-
   const onColorSelect = (color: string) => recipesActions.changeRecipeColor(p.recipeIndex, color)
   const onRecipeDelete = () => recipesActions.deleteRecipe(p.recipeIndex)
   const onRecipeUpdate = () => { isAnyFieldDirty && recipesActions.updateRecipe(p.recipeIndex);}
   const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.recipeIndex) }
+
+  const droppableSectionProps: Omit<DragDropDroppableProps, 'children'> = {
+    id: `${id}`,
+    type: "recipe-section-container",
+    acceptTypes: ["recipe-section"],
+    items: sections,
+    item: recipe,
+  };
+
+  const draggableSectionProps = (section: { id: string; type: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+    id: `recipe-section-draggable-${section.id}`,
+    index: index,
+    type: "recipe-section",
+    acceptTypes: ["recipe-section"],
+    containerId: id,
+    item: section,
+  });
 
     return (
       <div className="flex flex-col w-full justify-center font-sans border border-gray-400 transition-shadow duration-300" style={containerShadowStyle}>
@@ -65,8 +82,9 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
+              <p>{form.getValues(`recipes.${p.recipeIndex}.id`)} - {form.getValues(`recipes.${p.recipeIndex}.sortOrder`)}</p>
               <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
-              { errorMessages?.name?.message &&  <p className="text-red-500 pl-1">{errorMessages?.name?.message}</p>}
+              { errors?.name?.message &&  <p className="text-red-500 pl-1">{errors?.name?.message}</p>}
              </div>
           </div>
           {/* Actions */}
@@ -80,14 +98,14 @@ export default function Recipe(p: RecipeProps) {
           </div>
         </div>
         {/* Recipe sections */}    
-        <DragDropDroppable droppableId={`${id}`} type={`recipe-section`}>
-          {
-            sections.map((section, sectionIndex) => { return (
-              <DragDropDraggable index={sectionIndex} draggableId={section.id} key={`${section.id}`}>
-                <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
-              </DragDropDraggable>
-            )})
-          }  
+        <DragDropDroppable {...droppableSectionProps} style={{ minHeight: '4rem', background: 'white' }}>
+            {
+              sections.map((section, sectionIndex) => { return (
+                <DragDropDraggable {...draggableSectionProps(section, sectionIndex)} key={`${section.id}`}>
+                  <RecipeSectionItem key={`${section.id}-${sectionIndex}`} index={sectionIndex} type={section.type} recipeIndex={p.recipeIndex} />
+                </DragDropDraggable>
+              )})
+            }  
         </DragDropDroppable>  
       </div>
     );

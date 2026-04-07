@@ -1,7 +1,9 @@
 import { api } from '@/api/api';
 import { queryClient } from '@/components/common/queryClient/queryClient';
-import { nullIfTrackingIdElseKeep } from '@/components/common/utils';
+import { mainIdOrNullIfNew, nullIfTrackingIdElseKeep, idOrNullIfNew } from '@/components/common/utils';
 import { RecipeModel, RecipeSchema } from '@/components/protected/recipes/recipe-model';
+import { RecipeSectionModel } from '@/components/protected/recipes/sections/recipe-section-schema';
+import { normalizeRecipeSectionsSortOrder } from '@/components/protected/recipes/utils';
 import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 
 
@@ -20,12 +22,6 @@ export const useRecipesApi = (ownerId: string) => {
         const result = json
           .map(recipe => RecipeSchema.safeParse(recipe).data)
           .filter((r): r is RecipeModel => r != undefined) 
-        console.log(json
-          .map(recipe => RecipeSchema.safeParse(recipe))
-          .filter(r => !r.success)
-          .map(r => r.error.issues)
-        )
-      
         onSuccess(result)
         return result
       },
@@ -37,16 +33,16 @@ export const useRecipesApi = (ownerId: string) => {
       // TODO move this to sanitization mapper
       const sanitizedBody = { 
         ...body,
-        id: nullIfTrackingIdElseKeep(body.id),
+        id: mainIdOrNullIfNew(body),
         sections: body.sections.map(section => ({
           ...section, 
-          id: nullIfTrackingIdElseKeep(section.id),
+          id: mainIdOrNullIfNew(section),
           ingredients: 
             section.type == 'INGREDIENTS' ? 
             section.ingredients.map(ingredient => (
               {
                 ...ingredient,
-                id: nullIfTrackingIdElseKeep(section.id)
+                id: mainIdOrNullIfNew(section)
               } 
             ))
             : undefined
@@ -58,22 +54,25 @@ export const useRecipesApi = (ownerId: string) => {
   });
 
   const createRecipe = (body: RecipeModel, onSuccess: (data: RecipeModel) => void) => createRecipeMutation.mutate(body, { onSuccess })
-  
   const updateRecipe = useMutation({
-    mutationFn: async (body: RecipeModel) => {
+    mutationFn: async (recipe: RecipeModel) => {
       const bodyWithoutTrackingIds = { 
-        ...body, 
-        sections: body.sections.map(section => ({
+        ...recipe, 
+        id: mainIdOrNullIfNew(recipe),
+        sections: recipe.sections.map(section => ({
           ...section, 
-          id: nullIfTrackingIdElseKeep(section.id),
+          id: mainIdOrNullIfNew(section),
+          recipeId: idOrNullIfNew(recipe.id, recipe.isNew),
           ...(section.type === 'INGREDIENTS' && {
             ingredients: section.ingredients?.map(ingredient => ({
               ...ingredient, 
-              id: nullIfTrackingIdElseKeep(ingredient.id)
+              id: mainIdOrNullIfNew(ingredient),
+              recipeSectionId: idOrNullIfNew(section.id, section.isNew)              
             }))
           })  
         }))
       }
+      //bodyWithoutTrackingIds.sections = normalizeRecipeSectionsSortOrder(bodyWithoutTrackingIds.sections as RecipeSectionModel[])
       const res = await api.put(`/recipes`, bodyWithoutTrackingIds);
       return res.data;
     },

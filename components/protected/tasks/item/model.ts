@@ -6,6 +6,7 @@ export const TaskItemSchema = z.object({
   content: z.string().trim().min(1, "Task item content cannot be empty").max(2000, "Content cannot exceed 2000 characters"),
   completed: z.boolean().default(false),
   sortOrder: z.number().min(1),
+  isNew: z.boolean().default(false)
 });
 
 export type TaskItemModel = z.infer<typeof TaskItemSchema>;

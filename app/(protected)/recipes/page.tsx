@@ -2,25 +2,30 @@
 
 import { useRecipesApi } from "@/api/protected/recipes/useRecipesApi";
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
-import Skeleton from "@/components/common/Skeleton/skeleton";
+import { DragDropDraggable } from "@/components/common/drag-drop/DragDropDraggable";
+import { DragDropDroppable } from "@/components/common/drag-drop/DragDropDroppable";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
+import ContentLoadingSkeleton from "@/components/common/Skeleton/content-loading-skeleton";
 import Recipe from "@/components/protected/recipes/recipe";
 import { RecipeModel, RecipeSchema } from "@/components/protected/recipes/recipe-model";
 import { RecipeFormProvider } from "@/components/protected/recipes/RecipeFormProvider";
-import { createRecipe } from "@/components/protected/recipes/useRecipes";
+import { RecipesArray } from "@/components/protected/recipes/RecipesArray";
+import { createRecipe, useRecipes } from "@/components/protected/recipes/useRecipes";
 import Task from "@/components/protected/tasks/task";
 import { TaskFormProvider } from "@/components/protected/tasks/TaskFormProvider";
 import { useUserContext } from "@/components/protected/user/userContext/UserContext";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CopyPlus } from "lucide-react";
+import { CopyPlus, FileX } from "lucide-react";
+import { useContext, useEffect } from "react";
 import { Resolver, useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from 'zod'
 
 const Loading = () => {
   return(
     <div className="flex flex-col gap-4">
-      <Skeleton/>
-      <Skeleton/>
-      <Skeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
+      <ContentLoadingSkeleton/>
     </div>
   )
 }
@@ -28,34 +33,25 @@ const Loading = () => {
 export default function RecipesPage() {
   const { id: userId } = useUserContext()
   const recipesApi = useRecipesApi(userId)
-  
+
   const form = useForm<{ recipes: RecipeModel[] }>({
     resolver: zodResolver(z.object({ recipes: z.array(RecipeSchema) })) as Resolver<{ recipes: RecipeModel[] }>,
     defaultValues: { recipes: [] }
   });
-  const recipes = useWatch({
-    control: form.control
-  })
   
-  const defaultRecipes = recipesApi.get(userId, (data) => {form.reset({recipes: data})})
-  if (defaultRecipes.isLoading)
+  const recipes = recipesApi.get(userId, (data) => {form.reset({recipes: data})})
+  if (recipes.isLoading)
     return <Loading/>;
-
-  const onCreateRecipe = () => { createRecipe(form, userId, recipesApi.createRecipe) }
 
   return (
     <div className="flex flex-col h-full font-sans gap-4">
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Recipes</h1>
-        <CopyPlus size={52} className="border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={onCreateRecipe} />
+        <div id="add-recipe-placeholder"></div>
       </div>
       {/* Recipe list */}
       <RecipeFormProvider form={form}>
-        {
-          recipes.recipes?.map((recipe, i) =>
-            <Recipe key={`${recipe.id}-${i}`} recipeIndex={i}></Recipe>
-          )
-        }
+        <RecipesArray></RecipesArray>
       </RecipeFormProvider>
     </div>
   );

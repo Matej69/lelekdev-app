@@ -1,12 +1,11 @@
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi"
 import { useUserContext } from "../user/userContext/UserContext"
 import { TaskModel } from "../tasks/model"
-import { generateTrackingId, maxPlus1Or1 } from "@/components/common/utils"
+import { forceFormDirtiness, generateTrackingId, maxPlus1Or1, moveAcrossCollections, moveInCollection } from "@/components/common/utils"
 import { useFieldArray, useFormContext, UseFormReturn } from "react-hook-form"
 import { TaskItemModel } from "../tasks/item/model"
 import { normalizeTaskItemsSortOrder } from "../tasks/utils"
 import { taskColors } from "../tasks/constants"
-import { DropResult, ResponderProvided } from "@hello-pangea/dnd"
 import { useRecipesApi } from "@/api/protected/recipes/useRecipesApi"
 import { RecipeModel, RecipeSchema } from "./recipe-model"
 import { useQuery } from "@tanstack/react-query"
@@ -16,6 +15,8 @@ import { IngredientModel } from "./sections/ingredient/ingredient-model"
 import { RecipeIngredientSectionModel, RecipeIngredientSectionModelSchema } from "./sections/ingredient/recipe-ingredient-section-model"
 import { RecipeTextSectionModel } from "./sections/text/recipe-text-section-model"
 import { normalizeIngredientsSortOrder, normalizeRecipeSectionsSortOrder, normalizeRecipeSortOrder } from "./utils"
+import { Active, Over } from "@dnd-kit/core"
+import { DragEvent } from "@/components/common/drag-drop/DragEvent"
 
 // Has to be outside of useRecipes hook since it is called outside of TaskFormProvider
 export const createRecipe = (
@@ -26,6 +27,7 @@ export const createRecipe = (
   const recipes = form.getValues().recipes
   const newRecipe: RecipeModel = {
     id: generateTrackingId(),
+    isNew: true,
     ownerId: userId,
     name: "new",
     color: taskColors.beige,
@@ -35,22 +37,43 @@ export const createRecipe = (
   mutateFun(newRecipe, (createdRecipe) => {
     newRecipe.id = createdRecipe.id
     recipes.splice(0, 0, newRecipe)
+    recipes.forEach((recipe, i) => { if(i > 0) recipe.sortOrder += 1}) // Push other recipes down
     form.setValue('recipes', recipes);
   })
 }
 
 export const useRecipes = () => {
     const { id: userId } = useUserContext()
-    const recipeService = useRecipesApi(userId)
+    const recipesApi = useRecipesApi(userId)
     const form = useFormContext<{recipes: RecipeModel[]}>()
 
+    const createRecipe = () => {
+      const newRecipe: RecipeModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        ownerId: userId,
+        name: "new",
+        color: taskColors.beige,
+        sortOrder: 1,
+        sections: [],
+      }
+      recipesApi.createRecipe(
+        newRecipe, 
+        (recipeRecieved) => {
+          const recipes = [recipeRecieved, ...form.getValues('recipes')]
+          recipes.forEach((task, i) => { if(i > 0) task.sortOrder += 1})
+          form.setValue('recipes', recipes)
+        })
+    }
+
     const deleteRecipe = async (index: number) => {
-      const recipes = form.getValues().recipes
+      let recipes = [...form.getValues().recipes]
       const recipeToDelete = recipes[index]
-      recipeService.deleteRecipe.mutate(recipeToDelete.id, {
+      recipesApi.deleteRecipe.mutate(recipeToDelete.id, {
         onSuccess: () => {
-          const newRecipes = recipes.filter(r => r.id != recipeToDelete.id) 
-          form.setValue('recipes', newRecipes)
+          recipes = recipes.filter(r => r.id != recipeToDelete.id) 
+          recipes.forEach((r, i) => { r.sortOrder = i >= index ? r.sortOrder - 1 : r.sortOrder}) // Move up recipes after deleted one
+          form.setValue('recipes', recipes)
         }
       })
     };
@@ -63,7 +86,7 @@ export const useRecipes = () => {
       const recipeToUpdate = form.getValues(`recipes`)[recipeIndex]
       const isFormValid = await form.trigger(`recipes.${recipeIndex}`);
       if (!isFormValid) return;
-      const res = await recipeService.updateRecipe.mutateAsync(recipeToUpdate)
+      const res = await recipesApi.updateRecipe.mutateAsync(recipeToUpdate)
       if(!res) return;
       form.resetField(`recipes.${recipeIndex}`, {
         keepDirty: false,
@@ -71,10 +94,25 @@ export const useRecipes = () => {
       });
     }
 
+    const moveRecipe = (dragEvent: DragEvent) => {
+      const { dragged, target, draggedOn } = dragEvent
+      const isDraggingRecipe = dragged.type == 'recipe'
+      const isDraggingToRecipe = target.type == 'recipe'
+      if(!isDraggingRecipe || !isDraggingToRecipe || !draggedOn.sameContainer)
+        return;
+      if(target.index == null)
+        return;
+      const recipes = form?.getValues(`recipes`)
+      let newRecipes = moveInCollection(recipes, dragged.index, target.index)
+      form.setValue(`recipes`, newRecipes)
+      recipesApi.updateRecipe.mutate(newRecipes[target.index])
+    }
+
     const createRecipeSection = (recipeIndex: number) => {
       const recipe = form.getValues(`recipes`)[recipeIndex]
       const newSection: RecipeSectionModel = {
         id: generateTrackingId(),
+        isNew: true,
         recipeId: recipe.id,
         type: 'TEXT',
         title: '',
@@ -89,6 +127,7 @@ export const useRecipes = () => {
       const newSections = [...form.getValues('recipes')[recipeIndex].sections]
       newSections.splice(sectionIndex, 1)
       form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      forceFormDirtiness(form, `recipes.${recipeIndex}.sections`)
     }
 
     const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, newType: RecipeSectionType) => {
@@ -117,30 +156,66 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
     }
 
-    const moveRecipeSection = (result: DropResult<string>): void => {
-      if(!result.destination) return;
-      const droppedOnSamePlace =
-      result.source.droppableId == result.destination.droppableId && 
-      result.source.index == result.destination?.index 
-      if(droppedOnSamePlace) return;
-      // Find section that is moving
-      const recipes = [...form.getValues('recipes')]
-      const sourceRecipe = recipes.find(r => r.id === result.source.droppableId)
-      const destinationRecipe = recipes.find(r => r.id === result.destination?.droppableId)
-      const sectionToMove = sourceRecipe?.sections.find(s => s.id === result.draggableId)
-      if(!sourceRecipe || !destinationRecipe || !sectionToMove) return;
-      const freshSectionToMove: RecipeSectionModel = {
-        ...sectionToMove, 
-        id: generateTrackingId(), 
-        recipeId: destinationRecipe?.id, 
-        ...(sectionToMove?.type === 'INGREDIENTS' && { ingredients: sectionToMove.ingredients.map(ingr => ({...ingr, id: generateTrackingId()}))})
+    const newShallowCopySectionFromExisting = (section: RecipeSectionModel, recipeId: string) => {
+      return {
+            ...section,
+            isNew: true,
+            recipeId, 
+            ...(section?.type === 'INGREDIENTS' && { ingredients: section.ingredients.map(ingr => ({...ingr, isNew: true}))})
+          } as RecipeSectionModel
+    }
+
+    const moveRecipeSection = (dragEvent: DragEvent) => {
+      const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
+      const types = {
+        item: 'recipe-section',
+        container: 'recipe-section-container'
       }
-      sourceRecipe?.sections.splice(result.source.index, 1) // Removes from source index
-      destinationRecipe?.sections.splice(result.destination.index, 0, freshSectionToMove) // Adds to destination index
-      // Add to destination
-      console.log(freshSectionToMove)
-      const normalizedItems = normalizeRecipeSortOrder(recipes) // Reassigns task order to be same as index
-      form.setValue('recipes', normalizedItems, {shouldDirty: true})
+      const isDraggingRecipeSection = dragged.type == types.item
+      const isDraggingToItemOrContainer = [types.item, types.container].includes(target.type)
+      if(!isDraggingRecipeSection || !isDraggingToItemOrContainer)
+        return;
+      const recipes = [...form.getValues('recipes')]
+      // Dragged to different container
+      if(action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
+        const targetRecipeId = draggedOn.container ? target.id : target.groupId
+        const targetRecipe = recipes.find(r => r.id == targetRecipeId)
+        const draggedRecipe = recipes.find(r => r.id == dragged.groupId)
+        const targetContainerEmpty = targetRecipe?.sections?.length == 0
+        const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
+        if(draggedRecipe?.sections && targetRecipe?.sections && dragged.index < draggedRecipe.sections.length && indexToMoveItemTo != null) {
+          moveAcrossCollections(
+            draggedRecipe.sections, dragged.index,
+            targetRecipe.sections, indexToMoveItemTo,
+            (itemToMove) => newShallowCopySectionFromExisting(itemToMove, targetRecipe.id)
+          )
+          form.setValue('recipes', recipes)
+        }
+      }
+      else if(action == 'drag-end') {
+        // Dragged in same container
+        if(draggedOn.sameContainer && !draggedOn.sameItem) {
+          const recipeIndex = recipes.findIndex(r => target.groupId == r.id)
+          const recipe = {...recipes[recipeIndex]}
+          if(target.index != null) {
+            recipe.sections = moveInCollection(recipe.sections || [], dragged.index, target.index)
+            const shouldDirty = dragged.groupId === activeSnapshot.groupId
+            form.setValue(`recipes.${recipeIndex}.sections`, recipe.sections, { shouldDirty })
+          }
+        }
+        // Dragged to different container - commit changes - automatically save since its weird to manually save both containers when item moves
+        const differentContainerFromSnapshot = dragged.groupId !== activeSnapshot.groupId 
+        if(differentContainerFromSnapshot) {
+          const originRecipe = recipes.find(r => r.id == dragEvent.activeSnapshot.groupId)
+          const overRecipeId = target.type == types.item ? target.groupId : target.id 
+          const overRecipe = recipes.find(r => r.id == overRecipeId)
+          if(originRecipe && overRecipe) {
+            recipesApi.updateRecipe.mutate(originRecipe)
+            recipesApi.updateRecipe.mutate(overRecipe)
+          }
+        }
+      }
+      console.log(dragEvent)
     }
 
   const createIngredient = (recipeIndex: number, sectionIndex: number) => {
@@ -148,6 +223,7 @@ export const useRecipes = () => {
     const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
     ingredients.push({
       id: generateTrackingId(),
+      isNew: true,
       name: '',
       amount: 0,
       unit: '',
@@ -163,28 +239,107 @@ export const useRecipes = () => {
     ingredients.splice(ingredientIndex, 1)
     ingredients = normalizeIngredientsSortOrder(ingredients)
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+    forceFormDirtiness(form, `recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
   }
+
+  const newShallowCopyIngredientFromExisting = (ingredient: IngredientModel, sectionId: string) => {
+    return {
+      ...ingredient,
+      isNew: true,
+      recipeSectionId: sectionId,
+    } as IngredientModel
+  }
+
+  const moveRecipeIngredient = (dragEvent: DragEvent) => {
+      const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
+      const types = {
+        item: 'ingredient',
+        container: 'ingredient-container'
+      }
+      const isDraggingIngredient = dragged.type == types.item
+      const isDraggingToItemOrContainer = [types.item, types.container].includes(target.type)
+      if(!isDraggingIngredient || !isDraggingToItemOrContainer)
+        return;
+      const recipes = [...form.getValues('recipes')]
+      const sections = recipes.flatMap(r => r.sections).filter(s => s.type == 'INGREDIENTS') as RecipeIngredientSectionModel[]
+      const ingredients = sections.flatMap(s => s.ingredients)
+      // Dragged to different container
+      if(action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
+        const targetRecipeSectionId = draggedOn.container ? target.id : target.groupId
+        const targetSection = sections.find(r => r.id == targetRecipeSectionId)
+        const draggedSection = sections.find(r => r.id == dragged.groupId)
+        const targetContainerEmpty = targetSection?.ingredients?.length == 0
+        const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
+        if(draggedSection?.ingredients && targetSection?.ingredients && draggedSection.ingredients.length > dragged.index && indexToMoveItemTo != null) {
+          moveAcrossCollections(
+            draggedSection.ingredients, dragged.index,
+            targetSection.ingredients, indexToMoveItemTo,
+            (itemToMove) => newShallowCopyIngredientFromExisting(itemToMove, targetSection.id)
+          )
+          form.setValue('recipes', recipes)
+        }
+      }
+      else if(action == 'drag-end') {
+        // Dragged in same container
+        if(draggedOn.sameContainer && !draggedOn.sameItem) {
+          const targetSection = sections.find(s => s.id == target.groupId) as RecipeIngredientSectionModel
+          const targetRecipe = recipes.find(r => r.id == targetSection.recipeId)
+          const targetRecipeIndex = recipes.findIndex(r => r.id == targetRecipe?.id)
+          const targetSectionIndex = targetRecipe?.sections.findIndex(s => s.id == target?.groupId)
+          const targetIngredientIndex = target.index
+          if(targetRecipeIndex == null || targetSectionIndex == null || targetIngredientIndex == null)
+            return;
+          if(target.index != null) {
+            targetSection.ingredients = moveInCollection(targetSection.ingredients || [], dragged.index, target.index)
+            const shouldDirty = dragged.groupId === activeSnapshot.groupId
+            form.setValue(`recipes.${targetRecipeIndex}.sections.${targetSectionIndex}.ingredients`, targetSection.ingredients, { shouldDirty })
+          }
+        }
+        // Commit changes from drag to different empty or non empty container - automatically save(backend commit) since its weird to manually save both containers when item moves
+        const differentContainerFromInitial = dragged.groupId !== activeSnapshot.groupId
+        if(differentContainerFromInitial) {
+          const originSection = sections.find(s => s.id == dragEvent.activeSnapshot.groupId)
+          const originRecipe = recipes.find(r => r.id == originSection?.recipeId)
+          const targetSectionId = target.type == types.item ? target.groupId : target.id 
+          const targetSection = sections.find(s => s.id == targetSectionId)
+          const targetRecipe = recipes.find(r => r.id == targetSection?.recipeId)
+          if(!originRecipe || !targetRecipe)
+            return;
+          const sameRecipeIngredientMove = originRecipe == targetRecipe
+          const differentRecipeIngredientMove = originRecipe != targetRecipe  
+          if(sameRecipeIngredientMove)
+            recipesApi.updateRecipe.mutate(originRecipe)
+          else if (differentRecipeIngredientMove) {
+            recipesApi.updateRecipe.mutate(originRecipe)
+            recipesApi.updateRecipe.mutate(targetRecipe)
+          }
+        }
+      }
+    }
 
   const duplicateRecipeSection = (recipeIndex: number, sectionIndex: number) => {
     let newSections = [...form.getValues(`recipes.${recipeIndex}.sections`)]
     const newSection = structuredClone(newSections[sectionIndex])
     newSection.id = generateTrackingId()
+    newSection.isNew = true
     if(newSection.type == 'INGREDIENTS') {
       newSection.ingredients.forEach(ingredient => {
         ingredient.id = generateTrackingId()
+        ingredient.isNew = true,
         ingredient.recipeSectionId = null
     })}
     newSections.splice(sectionIndex, 0, newSection)
-    newSections = normalizeRecipeSectionsSortOrder(newSections)
     form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
   }
 
 
     return {
       form,
+      createRecipe,
       changeRecipeColor,
       deleteRecipe,
       updateRecipe,
+      moveRecipe,
       createRecipeSection,
       deleteRecipeSection,
       changeRecipeSectionType,
@@ -193,6 +348,7 @@ export const useRecipes = () => {
       createIngredient,
       deleteIngredient,
       changeIngredientAmount,
+      moveRecipeIngredient,
       duplicateRecipeSection
     }
 }
