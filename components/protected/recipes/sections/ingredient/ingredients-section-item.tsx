@@ -74,8 +74,8 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
            </div>
            <CopyPlus className="cursor-pointer" onClick={onCreateIngredient} />
            <Copy className="cursor-pointer" onClick={onDuplicateRecipeSection}/>
-           <SectionTypeSwitch defaultType="INGREDIENTS" onChange={onChangeRecipeSectionType}></SectionTypeSwitch>
            <PencilRuler size={26} className="cursor-pointer" onClick={onChangeSectionLinkEdit} color={section.linkedAmountUpdate ? "black" : "#bababa"} />
+           <SectionTypeSwitch defaultType="INGREDIENTS" onChange={onChangeRecipeSectionType}></SectionTypeSwitch>
            <Trash2 size={26} className="cursor-pointer"  onClick={onSectionDelete} />
          </div>
          { /* Ingredients */ }
