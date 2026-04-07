@@ -15,8 +15,12 @@ export const nullIfTrackingIdElseKeep = (id: string) => {
   return (id.startsWith('[new]')) ? null : id;
 }
 
-export const idOrNullIfNew = <TItem extends {id: string | null, isNew: boolean},> (item: TItem) => {
+export const mainIdOrNullIfNew = <TItem extends {id: string | null, isNew: boolean},> (item: TItem) => {
   return item.isNew ? null : item.id
+} 
+
+export const idOrNullIfNew = (id: string | null, isNew: boolean) => {
+  return isNew ? null : id 
 } 
 
 export const maxPlus1Or1 = <TItem,> (collection: TItem[], extractor: (el: TItem) => number) => {

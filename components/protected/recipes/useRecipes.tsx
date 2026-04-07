@@ -241,6 +241,81 @@ export const useRecipes = () => {
     forceFormDirtiness(form, `recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
   }
 
+  const newShallowCopyIngredientFromExisting = (ingredient: IngredientModel, sectionId: string) => {
+    return {
+      ...ingredient,
+      isNew: true,
+      recipeSectionId: sectionId,
+    } as IngredientModel
+  }
+
+  const moveRecipeIngredient = (dragEvent: DragEvent) => {
+      const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
+      const types = {
+        item: 'ingredient',
+        container: 'ingredient-container'
+      }
+      const isDraggingIngredient = dragged.type == types.item
+      const isDraggingToItemOrContainer = [types.item, types.container].includes(target.type)
+      if(!isDraggingIngredient || !isDraggingToItemOrContainer)
+        return;
+      const recipes = [...form.getValues('recipes')]
+      const sections = recipes.flatMap(r => r.sections).filter(s => s.type == 'INGREDIENTS') as RecipeIngredientSectionModel[]
+      const ingredients = sections.flatMap(s => s.ingredients)
+      // Dragged to different container
+      if(action == 'drag-over' && !draggedOn.sameContainer && !draggedOn.sameItem) {
+        const targetRecipeSectionId = draggedOn.container ? target.id : target.groupId
+        const targetSection = sections.find(r => r.id == targetRecipeSectionId)
+        const draggedSection = sections.find(r => r.id == dragged.groupId)
+        const targetContainerEmpty = targetSection?.ingredients?.length == 0
+        const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
+        if(draggedSection?.ingredients && targetSection?.ingredients && draggedSection.ingredients.length > dragged.index && indexToMoveItemTo != null) {
+          moveAcrossCollections(
+            draggedSection.ingredients, dragged.index,
+            targetSection.ingredients, indexToMoveItemTo,
+            (itemToMove) => newShallowCopyIngredientFromExisting(itemToMove, targetSection.id)
+          )
+          form.setValue('recipes', recipes)
+        }
+      }
+      else if(action == 'drag-end') {
+        // Dragged in same container
+        if(draggedOn.sameContainer && !draggedOn.sameItem) {
+          const targetSection = sections.find(s => s.id == target.groupId) as RecipeIngredientSectionModel
+          const targetRecipe = recipes.find(r => r.id == targetSection.recipeId)
+          const targetRecipeIndex = recipes.findIndex(r => r.id == targetRecipe?.id)
+          const targetSectionIndex = targetRecipe?.sections.findIndex(s => s.id == target?.groupId)
+          const targetIngredientIndex = target.index
+          if(targetRecipeIndex == null || targetSectionIndex == null || targetIngredientIndex == null)
+            return;
+          if(target.index != null) {
+            targetSection.ingredients = moveInCollection(targetSection.ingredients || [], dragged.index, target.index)
+            const shouldDirty = dragged.groupId === activeSnapshot.groupId
+            form.setValue(`recipes.${targetRecipeIndex}.sections.${targetSectionIndex}.ingredients`, targetSection.ingredients, { shouldDirty })
+          }
+        }
+        // Commit changes from drag to different empty or non empty container - automatically save(backend commit) since its weird to manually save both containers when item moves
+        const differentContainerFromInitial = dragged.groupId !== activeSnapshot.groupId
+        if(differentContainerFromInitial) {
+          const originSection = sections.find(s => s.id == dragEvent.activeSnapshot.groupId)
+          const originRecipe = recipes.find(r => r.id == originSection?.recipeId)
+          const targetSectionId = target.type == types.item ? target.groupId : target.id 
+          const targetSection = sections.find(s => s.id == targetSectionId)
+          const targetRecipe = recipes.find(r => r.id == targetSection?.recipeId)
+          if(!originRecipe || !targetRecipe)
+            return;
+          const sameRecipeIngredientMove = originRecipe == targetRecipe
+          const differentRecipeIngredientMove = originRecipe != targetRecipe  
+          if(sameRecipeIngredientMove)
+            recipesApi.updateRecipe.mutate(originRecipe)
+          else if (differentRecipeIngredientMove) {
+            recipesApi.updateRecipe.mutate(originRecipe)
+            recipesApi.updateRecipe.mutate(targetRecipe)
+          }
+        }
+      }
+    }
+
   const duplicateRecipeSection = (recipeIndex: number, sectionIndex: number) => {
     let newSections = [...form.getValues(`recipes.${recipeIndex}.sections`)]
     const newSection = structuredClone(newSections[sectionIndex])
@@ -272,6 +347,7 @@ export const useRecipes = () => {
       createIngredient,
       deleteIngredient,
       changeIngredientAmount,
+      moveRecipeIngredient,
       duplicateRecipeSection
     }
 }

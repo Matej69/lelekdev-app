@@ -8,6 +8,10 @@ import SectionTypeSwitch from "../section-type-switch";
 import { RecipeIngredientSectionModel } from "./recipe-ingredient-section-model";
 import { RecipeTextSectionModel } from "../text/recipe-text-section-model";
 import IngredientItem from "./ingredient-item";
+import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/drag-drop/DragDropDroppable";
+import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/drag-drop/DragDropDraggable";
+import { useContext, useEffect } from "react";
+import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 
 interface IngredientsSectionItemProps {
   sectionIndex: number,
@@ -29,6 +33,11 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
   });
 
   const recipesActions = useRecipes()
+
+  const dragDropContext = useContext(DragDropHandlerContext)
+  useEffect(() => {
+    dragDropContext.registerHandler(`ingredient`, recipesActions.moveRecipeIngredient)
+  }, [])
   
   const onSectionDelete = () => { recipesActions.deleteRecipeSection(p.recipeIndex, p.sectionIndex) }
   const onChangeRecipeSectionType = (type: RecipeSectionType) => { recipesActions.changeRecipeSectionType(p.recipeIndex, p.sectionIndex, type) }
@@ -36,6 +45,24 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
   const onCreateIngredient = () => { recipesActions.createIngredient(p.recipeIndex, p.sectionIndex) }
   const onDuplicateRecipeSection = () => { recipesActions.duplicateRecipeSection(p.recipeIndex, p.sectionIndex) }
 
+  const droppableIngredientsIds = section.ingredients?.map(r => ({ id: `ingredient-draggable-${r.id}` })) || []
+
+  const droppableProps: Omit<DragDropDroppableProps, 'children'> = {
+      id: `${section.id}`,
+      type: "ingredient-container",
+      acceptTypes: ["ingredient"],
+      items: droppableIngredientsIds,
+      item: section,
+    };
+  
+  const draggableProps = (ingredient: { id: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
+    id: `ingredient-draggable-${ingredient.id}`,
+    index: index,
+    type: "ingredient",
+    acceptTypes: ["ingredient"],
+    containerId: section.id,
+    item: ingredient,
+  });
   
   return (
      <div className="flex flex-col bg-white p-2 gap-1">
@@ -52,13 +79,15 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
            <Trash2 size={26} className="cursor-pointer"  onClick={onSectionDelete} />
          </div>
          { /* Ingredients */ }
-         <div className="flex flex-col items-start gap-2">
-          {
-            ingredients.map((ingredient, ingredientIndex) => {
-              return <IngredientItem key={`${ingredient.id}-${ingredientIndex}`} recipeIndex={p.recipeIndex} sectionIndex={p.sectionIndex} ingredientIndex={ingredientIndex}/>
-            })
-          }
-         </div>
+        <DragDropDroppable {...droppableProps} style={{ minHeight: '1.7rem', background: 'white' }}>
+            {
+              ingredients.map((ingredient, ingredientIndex) => { return (
+                <DragDropDraggable key={`${ingredient.id}-${ingredientIndex}`} {...draggableProps(ingredient, ingredientIndex)}>
+                  <IngredientItem recipeIndex={p.recipeIndex} sectionIndex={p.sectionIndex} ingredientIndex={ingredientIndex}/>
+                </DragDropDraggable>
+              )})
+            }  
+        </DragDropDroppable> 
      </div>
   );
 }

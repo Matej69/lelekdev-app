@@ -1,6 +1,6 @@
 import { api } from '@/api/api';
 import { queryClient } from '@/components/common/queryClient/queryClient';
-import { idOrNullIfNew, nullIfTrackingIdElseKeep } from '@/components/common/utils';
+import { mainIdOrNullIfNew, nullIfTrackingIdElseKeep, idOrNullIfNew } from '@/components/common/utils';
 import { RecipeModel, RecipeSchema } from '@/components/protected/recipes/recipe-model';
 import { RecipeSectionModel } from '@/components/protected/recipes/sections/recipe-section-schema';
 import { normalizeRecipeSectionsSortOrder } from '@/components/protected/recipes/utils';
@@ -33,16 +33,16 @@ export const useRecipesApi = (ownerId: string) => {
       // TODO move this to sanitization mapper
       const sanitizedBody = { 
         ...body,
-        id: idOrNullIfNew(body),
+        id: mainIdOrNullIfNew(body),
         sections: body.sections.map(section => ({
           ...section, 
-          id: idOrNullIfNew(section),
+          id: mainIdOrNullIfNew(section),
           ingredients: 
             section.type == 'INGREDIENTS' ? 
             section.ingredients.map(ingredient => (
               {
                 ...ingredient,
-                id: idOrNullIfNew(section)
+                id: mainIdOrNullIfNew(section)
               } 
             ))
             : undefined
@@ -54,18 +54,20 @@ export const useRecipesApi = (ownerId: string) => {
   });
 
   const createRecipe = (body: RecipeModel, onSuccess: (data: RecipeModel) => void) => createRecipeMutation.mutate(body, { onSuccess })
-  
   const updateRecipe = useMutation({
-    mutationFn: async (body: RecipeModel) => {
+    mutationFn: async (recipe: RecipeModel) => {
       const bodyWithoutTrackingIds = { 
-        ...body, 
-        sections: body.sections.map(section => ({
+        ...recipe, 
+        id: mainIdOrNullIfNew(recipe),
+        sections: recipe.sections.map(section => ({
           ...section, 
-          id: idOrNullIfNew(section),
+          id: mainIdOrNullIfNew(section),
+          recipeId: idOrNullIfNew(recipe.id, recipe.isNew),
           ...(section.type === 'INGREDIENTS' && {
             ingredients: section.ingredients?.map(ingredient => ({
               ...ingredient, 
-              id: idOrNullIfNew(ingredient)
+              id: mainIdOrNullIfNew(ingredient),
+              recipeSectionId: idOrNullIfNew(section.id, section.isNew)              
             }))
           })  
         }))
