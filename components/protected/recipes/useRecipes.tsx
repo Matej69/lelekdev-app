@@ -183,7 +183,7 @@ export const useRecipes = () => {
         const draggedRecipe = recipes.find(r => r.id == dragged.groupId)
         const targetContainerEmpty = targetRecipe?.sections?.length == 0
         const indexToMoveItemTo = targetContainerEmpty ? 0 : target.index
-        if(draggedRecipe?.sections && targetRecipe?.sections && draggedRecipe.sections.length > dragged.index && indexToMoveItemTo != null) {
+        if(draggedRecipe?.sections && targetRecipe?.sections && dragged.index < draggedRecipe.sections.length && indexToMoveItemTo != null) {
           moveAcrossCollections(
             draggedRecipe.sections, dragged.index,
             targetRecipe.sections, indexToMoveItemTo,
@@ -215,6 +215,7 @@ export const useRecipes = () => {
           }
         }
       }
+      console.log(dragEvent)
     }
 
   const createIngredient = (recipeIndex: number, sectionIndex: number) => {

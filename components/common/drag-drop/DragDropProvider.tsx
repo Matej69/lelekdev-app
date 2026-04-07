@@ -11,6 +11,7 @@ import { Coordinates } from '@dnd-kit/utilities';
  * When a drag event occurs, it checks the type of the active draggable item and sorts the potential droppable targets accordingly.
  * Droppable elements that match or partialy match the type of the active draggable item are given higher priority, ensuring that they are considered first for drop interactions.
  * Main problem this solves is that it allows transition animation to play normally when item is dragged over its container
+ * Sort by 'priorityIdPrefixes' in that order
  * @param args 
  * @returns 
  */
@@ -18,13 +19,21 @@ const collisionDetectionStrategy: Parameters<typeof DndContext>["0"]["collisionD
     const collisions = pointerWithin(args);
     if (!collisions) return [];
     const activeType = args.active?.data?.current?.type ?? '';
-    const priorityTypes = [`${activeType}-container`, `${activeType}-draggable`, `${activeType}-droppable`]
+    const priorityIdPrefixes = [
+        `${activeType}-draggable`,
+        `${activeType}-droppable`,
+        `${activeType}-container` 
+    ]
     const sorted = collisions.sort((a, b) => {
       const [aId, bId] = [`${a.id}`, `${b.id}`]
-      const aPriority = priorityTypes.some((t) => aId.includes(t)) ? 0 : 1;
-      const bPriority = priorityTypes.some((t) => bId.includes(t)) ? 0 : 1;
+      const aPriorityIndex = priorityIdPrefixes.findIndex(t => aId.includes(t))
+      const aPriority = aPriorityIndex >= 0 ? aPriorityIndex : priorityIdPrefixes.length 
+      const bPriorityIndex = priorityIdPrefixes.findIndex(t => bId.includes(t))
+      const bPriority = bPriorityIndex >= 0 ? bPriorityIndex : priorityIdPrefixes.length
       return aPriority - bPriority;
     });
+    console.log(priorityIdPrefixes)
+    console.log(sorted)
     return sorted;
 }
 

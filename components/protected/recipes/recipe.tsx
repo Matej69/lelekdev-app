@@ -66,7 +66,7 @@ export default function Recipe(p: RecipeProps) {
   };
 
   const draggableSectionProps = (section: { id: string; type: string }, index: number): Omit<DragDropDraggableProps, 'children'> => ({
-    id: section.id,
+    id: `recipe-section-draggable-${section.id}`,
     index: index,
     type: "recipe-section",
     acceptTypes: ["recipe-section"],
