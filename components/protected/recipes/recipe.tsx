@@ -57,11 +57,13 @@ export default function Recipe(p: RecipeProps) {
   const onRecipeUpdate = () => { isAnyFieldDirty && recipesActions.updateRecipe(p.recipeIndex);}
   const onRecipeCreateSection = () => { recipesActions.createRecipeSection(p.recipeIndex) }
 
+  const droppableSectionsIds = sections?.map(s => ({ id: `recipe-section-draggable-${s.id}` })) || []
+
   const droppableSectionProps: Omit<DragDropDroppableProps, 'children'> = {
     id: `${id}`,
     type: "recipe-section-container",
     acceptTypes: ["recipe-section"],
-    items: sections,
+    items: droppableSectionsIds,
     item: recipe,
   };
 
