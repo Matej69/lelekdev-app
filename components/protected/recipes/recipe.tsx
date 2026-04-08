@@ -84,7 +84,6 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
-              <p>{form.getValues(`recipes.${p.recipeIndex}.id`)} - {form.getValues(`recipes.${p.recipeIndex}.sortOrder`)}</p>
               <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
               { errors?.name?.message &&  <p className="text-red-500 pl-1">{errors?.name?.message}</p>}
              </div>

@@ -152,10 +152,12 @@ export const useTasks = () => {
         if(differentContainerFromSnapshot) {
           const originTask = tasks.find(r => r.id == dragEvent.activeSnapshot.groupId)
           const overTaskId = target.type == types.item ? target.groupId : target.id 
-          const overTask = tasks.find(r => r.id == overTaskId)
-          if(originTask && overTask) {
-            tasksApi.update.mutate(originTask)
-            tasksApi.update.mutate(overTask)
+          const targetTask = tasks.find(r => r.id == overTaskId)
+          if(originTask && targetTask) {
+            const originRecipeIndex = tasks.findIndex(r => r.id === originTask.id) 
+            updateTask(originRecipeIndex)
+            const targetRecipeIndex = tasks.findIndex(r => r.id === targetTask.id) 
+            updateTask(targetRecipeIndex)
           }
         }
       }

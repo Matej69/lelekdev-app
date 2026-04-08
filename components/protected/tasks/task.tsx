@@ -84,7 +84,6 @@ export default function Task(p: TaskProps) {
           <div className="flex grow">
              <Dot /> 
              <div>
-              <p>{form.getValues(`tasks.${p.index}.id`)} - {form.getValues(`tasks.${p.index}.sortOrder`)}</p>
               <input {...form.register(`tasks.${p.index}.title`)}></input>
               { errors?.title?.message &&  <p className="text-red-500 pl-1">{errors?.title?.message}</p>}
              </div>

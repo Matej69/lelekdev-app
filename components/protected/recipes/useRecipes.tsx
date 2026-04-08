@@ -165,7 +165,7 @@ export const useRecipes = () => {
           } as RecipeSectionModel
     }
 
-    const moveRecipeSection = (dragEvent: DragEvent) => {
+    const moveRecipeSection = async (dragEvent: DragEvent) => {
       const { dragged, target, activeSnapshot, draggedOn, action } = dragEvent
       const types = {
         item: 'recipe-section',
@@ -195,7 +195,7 @@ export const useRecipes = () => {
       else if(action == 'drag-end') {
         // Dragged in same container
         if(draggedOn.sameContainer && !draggedOn.sameItem) {
-          const recipeIndex = recipes.findIndex(r => target.groupId == r.id)
+          const recipeIndex = recipes.findIndex(r => r.id == target.groupId)
           const recipe = {...recipes[recipeIndex]}
           if(target.index != null) {
             recipe.sections = moveInCollection(recipe.sections || [], dragged.index, target.index)
@@ -207,15 +207,16 @@ export const useRecipes = () => {
         const differentContainerFromSnapshot = dragged.groupId !== activeSnapshot.groupId 
         if(differentContainerFromSnapshot) {
           const originRecipe = recipes.find(r => r.id == dragEvent.activeSnapshot.groupId)
-          const overRecipeId = target.type == types.item ? target.groupId : target.id 
-          const overRecipe = recipes.find(r => r.id == overRecipeId)
-          if(originRecipe && overRecipe) {
-            recipesApi.updateRecipe.mutate(originRecipe)
-            recipesApi.updateRecipe.mutate(overRecipe)
+          const targetRecipeId = target.type == types.item ? target.groupId : target.id 
+          const targetRecipe = recipes.find(r => r.id == targetRecipeId)
+          if(originRecipe && targetRecipe) {
+              const originRecipeIndex = recipes.findIndex(r => r.id === originRecipe.id) 
+              updateRecipe(originRecipeIndex)
+              const targetRecipeIndex = recipes.findIndex(r => r.id === targetRecipe.id) 
+              updateRecipe(targetRecipeIndex)
           }
         }
       }
-      console.log(dragEvent)
     }
 
   const createIngredient = (recipeIndex: number, sectionIndex: number) => {
@@ -310,8 +311,12 @@ export const useRecipes = () => {
           if(sameRecipeIngredientMove)
             recipesApi.updateRecipe.mutate(originRecipe)
           else if (differentRecipeIngredientMove) {
-            recipesApi.updateRecipe.mutate(originRecipe)
-            recipesApi.updateRecipe.mutate(targetRecipe)
+            if(originRecipe && targetRecipe) {
+              const originRecipeIndex = recipes.findIndex(r => r.id === originRecipe.id) 
+              updateRecipe(originRecipeIndex)
+              const targetRecipeIndex = recipes.findIndex(r => r.id === targetRecipe.id) 
+              updateRecipe(targetRecipeIndex)
+            }
           }
         }
       }
