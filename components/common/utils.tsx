@@ -130,4 +130,29 @@ export const idFromDragDropId = (dragDropId: string): string => {
   })
   return dragDropId
 }
+
+/**
+ * Registers quick create listener that will do action depending on focused element  
+ */
+export const registerQuickCreateListener = (targetType: string, actions: (data: any) => void) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey && e.key === "Enter")) return;
+      const active = document.activeElement as HTMLElement;
+      if (!active) return;
+      const container = active.closest("[data-type]");
+      if (!container) return;
+      const type = container.getAttribute("data-type");
+      if(type !== targetType) return;
+      const dataString = container.getAttribute("data-data");
+      if(!dataString) return;
+      const data = JSON.parse(dataString)
+      actions(data)
+  };
+  window.addEventListener("keydown", handleKeyDown);
+  return handleKeyDown
+}
+
+export const unregisterQuickCreateListener = (quickCreateFunction: (e: KeyboardEvent) => void) => {
+  window.removeEventListener("keydown", quickCreateFunction)
+}
   

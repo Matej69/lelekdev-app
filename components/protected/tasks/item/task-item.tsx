@@ -21,8 +21,14 @@ export default function TaskItem(p: TaskItemProps) {
   const onCompleteTaskItem = () => taskActions.completeTaskItem(p.taskIndex, p.index)
   const onDeleteTaskItem = () => taskActions.deleteTaskItem(p.taskIndex, p.index)
 
+  // Used as listener data for quick creation of new task item
+  const dataAttributes = {
+    'data-type': 'task-item',
+    'data-data': JSON.stringify({ taskIndex: p.taskIndex, taskItemIndex: p.index  })
+  } 
+
   return (
-    <div className="flex flex-col bg-white p-2">
+    <div className="flex flex-col bg-white p-2" {...dataAttributes}>
       <div className="flex items-center gap-2">
         <CircleCheck color={completionColor} size={30} className="mr-2 cursor-pointer" onClick={onCompleteTaskItem}/>
         <AutosizeTextarea placeholder="Enter content" register={form.register(`tasks.${p.taskIndex}.items.${p.index}.content`)} />

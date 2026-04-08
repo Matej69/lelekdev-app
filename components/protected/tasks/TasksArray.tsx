@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form"
 import Task from "./task"
 import { TaskFormProvider } from "./TaskFormProvider"
 import { TaskModel } from "./model"
-import { safeCreatePortal } from "@/components/common/utils"
+import { registerQuickCreateListener, safeCreatePortal, unregisterQuickCreateListener } from "@/components/common/utils"
 import { CopyPlus } from "lucide-react"
 import { useTasks } from "./useTasks"
 import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/drag-drop/DragDropDroppable"
@@ -21,12 +21,15 @@ export const TasksArray = () => {
     const [addTaskPortal, setAddTaskPortal] = useState<ReactPortal | null>(null) 
 
     useEffect(() => {
-      dragDropContext.registerHandler(`task`, taskActions.moveTask)
-      const portal = safeCreatePortal(
-          <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
-          'add-task-placeholder'
-      ) 
-      setAddTaskPortal(portal)
+        dragDropContext.registerHandler(`task`, taskActions.moveTask)
+        const quickCreateFunction = registerQuickCreateListener('task-item', (data: { taskIndex: number, taskItemIndex: number}) => {taskActions.createTaskItemAtIndex(data.taskIndex, data.taskItemIndex)})
+        const portal = safeCreatePortal(
+            <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
+            'add-task-placeholder'
+        ) 
+        setAddTaskPortal(portal)
+
+        return () => unregisterQuickCreateListener(quickCreateFunction);
     }, [])
 
     const droppableProps: Omit<DragDropDroppableProps, 'children'> = {

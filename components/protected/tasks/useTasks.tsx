@@ -81,6 +81,22 @@ export const useTasks = () => {
         form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
     };
 
+    const createTaskItemAfterIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
+      if(taskIndex == null || targetTaskItemIndex == null)
+          return;
+        const newItem: TaskItemModel = {
+          id: generateTrackingId(),
+          isNew: true,
+          content: "",
+          completed: false,
+          sortOrder: 0 // Doesnt matter for now, normalization will assign it
+        }
+        const items = form.getValues(`tasks.${taskIndex}.items`)
+        const newItems = [...items.slice(0, targetTaskItemIndex + 1), newItem, ...items.slice(targetTaskItemIndex + 1)];
+        const normalizedNewItems = normalizeTaskItemsSortOrder(newItems)
+        form.setValue(`tasks.${taskIndex}.items`, normalizedNewItems, { shouldDirty: true })
+    };
+
     const deleteTaskItem = (taskIndex: number, taskItemIndex: number) => {
       let items = [...form.getValues(`tasks.${taskIndex}.items`)]
       items = items.filter((el, i) => i != taskItemIndex)
@@ -170,6 +186,7 @@ export const useTasks = () => {
       updateTask,
       moveTask,
       createTaskItem,
+      createTaskItemAtIndex: createTaskItemAfterIndex,
       deleteTaskItem,
       completeTaskItem,
       changeColorTaskItem,

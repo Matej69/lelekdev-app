@@ -31,7 +31,7 @@ export const DragDropDraggable = (p: DragDropDraggableProps) => {
     }
 
     return(
-        <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
+        <div ref={setNodeRef} {...attributes} {...listeners} style={style} tabIndex={-1}>
             { p.children }
         </div>
     )
