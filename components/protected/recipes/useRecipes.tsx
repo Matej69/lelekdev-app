@@ -226,7 +226,7 @@ export const useRecipes = () => {
       id: generateTrackingId(),
       isNew: true,
       name: '',
-      amount: 0,
+      amount: '',
       unit: '',
       kcal: 0,
       sortOrder: maxPlus1Or1(ingredients, (ing) => ing.sortOrder),

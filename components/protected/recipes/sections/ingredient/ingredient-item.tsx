@@ -32,9 +32,10 @@ export default function IngredientItem(p: IngredientItemProps) {
   const onChangeIngredientAmount = (e: React.ChangeEvent<HTMLInputElement>, ingredientIndex: number) => { 
     const oldAmount = form.getValues(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${ingredientIndex}`)?.amount
     const newAmount = +e.target.value
-    if (!isNaN(oldAmount) && !isNaN(newAmount)) {
-      recipesActions.changeIngredientAmount(p.recipeIndex, p.sectionIndex, ingredientIndex, oldAmount, newAmount, section.linkedAmountUpdate)
-    }
+    if(isNaN(oldAmount) || isNaN(newAmount))
+      return;
+    console.log(newAmount)
+    recipesActions.changeIngredientAmount(p.recipeIndex, p.sectionIndex, ingredientIndex, oldAmount, newAmount, section.linkedAmountUpdate)
   }
   const onDeleteIngredient = () => recipesActions.deleteIngredient(p.recipeIndex, p.sectionIndex, p.ingredientIndex)
   
