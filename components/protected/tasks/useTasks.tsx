@@ -79,6 +79,9 @@ export const useTasks = () => {
         }
         const items = [...form.getValues(`tasks.${taskIndex}.items`), newItem]
         form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
+        queueMicrotask(() => {
+          form.setFocus(`tasks.${taskIndex}.items.${items.length - 1}.content`);
+        });
     };
 
     const createTaskItemAfterIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
@@ -95,7 +98,10 @@ export const useTasks = () => {
         const newItems = [...items.slice(0, targetTaskItemIndex + 1), newItem, ...items.slice(targetTaskItemIndex + 1)];
         const normalizedNewItems = normalizeTaskItemsSortOrder(newItems)
         form.setValue(`tasks.${taskIndex}.items`, normalizedNewItems, { shouldDirty: true })
-    };
+        queueMicrotask(() => {
+          form.setFocus(`tasks.${taskIndex}.items.${targetTaskItemIndex + 1}.content`);
+        });
+      };
 
     const deleteTaskItem = (taskIndex: number, taskItemIndex: number) => {
       let items = [...form.getValues(`tasks.${taskIndex}.items`)]
@@ -103,6 +109,11 @@ export const useTasks = () => {
       items = normalizeTaskItemsSortOrder(items)
       form.setValue(`tasks.${taskIndex}.items`, items, { shouldDirty: true })
       forceFormDirtiness(form, `tasks.${taskIndex}.items`)
+      queueMicrotask(() => {
+        if(items.length == 0) return;
+        const newFocusIndex = taskItemIndex === items.length ? items.length - 1 : taskItemIndex; // If deleted item was last one, move focus to new last item 
+        form.setFocus(`tasks.${taskIndex}.items.${newFocusIndex}.content`);
+      });
     }
 
     const completeTaskItem = (taskIndex: number, taskItemIndex: number) => {
@@ -179,6 +190,28 @@ export const useTasks = () => {
       }
     }
 
+    const moveTaskItemUp = (taskIndex: number, taskItemIndex: number) => {
+      const items = form.getValues(`tasks.${taskIndex}.items`)
+      if(!items || items.length <= 1 || taskItemIndex <= 0 || taskItemIndex >= items.length) 
+        return;
+      const newItems = moveInCollection(items, taskItemIndex, taskItemIndex - 1)
+      form.setValue(`tasks.${taskIndex}.items`, newItems, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`tasks.${taskIndex}.items.${taskItemIndex - 1}.content`);
+      });
+    }
+
+    const moveTaskItemDown = (taskIndex: number, taskItemIndex: number) => {
+      const items = form.getValues(`tasks.${taskIndex}.items`)
+      if(!items || items.length <= 1 || taskItemIndex < 0 || taskItemIndex >= items.length - 1) 
+        return;
+      const newItems = moveInCollection(items, taskItemIndex, taskItemIndex + 1)
+      form.setValue(`tasks.${taskIndex}.items`, newItems, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`tasks.${taskIndex}.items.${taskItemIndex + 1}.content`);
+      });
+    }
+
     return {
       form,
       createTask,
@@ -190,6 +223,8 @@ export const useTasks = () => {
       deleteTaskItem,
       completeTaskItem,
       changeColorTaskItem,
-      moveTaskItem
+      moveTaskItem,
+      moveTaskItemUp,
+      moveTaskItemDown
     }
 }

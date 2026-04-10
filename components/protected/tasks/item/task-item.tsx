@@ -5,6 +5,7 @@ import { Path, useFormContext } from "react-hook-form";
 import { TaskModel } from "../model";
 import { useTasks } from "../useTasks";
 import { completionTaskItemMarkColor } from "./constants";
+import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
 
 interface TaskItemProps {
   index: number,
@@ -21,11 +22,7 @@ export default function TaskItem(p: TaskItemProps) {
   const onCompleteTaskItem = () => taskActions.completeTaskItem(p.taskIndex, p.index)
   const onDeleteTaskItem = () => taskActions.deleteTaskItem(p.taskIndex, p.index)
 
-  // Used as listener data for quick creation of new task item
-  const dataAttributes = {
-    'data-type': 'task-item',
-    'data-data': JSON.stringify({ taskIndex: p.taskIndex, taskItemIndex: p.index  })
-  } 
+  const dataAttributes = createDataAttributes('task-item', { taskIndex: p.taskIndex, taskItemIndex: p.index })
 
   return (
     <div className="flex flex-col bg-white p-2" {...dataAttributes}>

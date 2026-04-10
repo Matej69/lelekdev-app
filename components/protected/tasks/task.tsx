@@ -10,7 +10,7 @@ import { FieldErrors, Resolver, useFieldArray, useForm, useFormContext, useWatch
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTasksApi } from "@/api/protected/tasks/useTasksApi";
 import { get } from "http";
-import { generateTrackingId, registerQuickCreateListener, safeCreatePortal, unregisterQuickCreateListener } from "@/components/common/utils";
+import { generateTrackingId, safeCreatePortal } from "@/components/common/utils";
 import { Popover } from "@/components/common/Popover";
 import { ColorPicker } from "@/components/common/ColorPicker";
 import { useTasks } from "./useTasks";

@@ -2,13 +2,14 @@ import { useFormContext } from "react-hook-form"
 import Task from "./task"
 import { TaskFormProvider } from "./TaskFormProvider"
 import { TaskModel } from "./model"
-import { registerQuickCreateListener, safeCreatePortal, unregisterQuickCreateListener } from "@/components/common/utils"
 import { CopyPlus } from "lucide-react"
 import { useTasks } from "./useTasks"
 import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/drag-drop/DragDropDroppable"
 import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/drag-drop/DragDropDraggable"
 import { ReactPortal, useContext, useEffect, useState } from "react"
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider"
+import { registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration"
+import { safeCreatePortal } from "@/components/common/utils"
 
 export const TasksArray = () => {
     const form = useFormContext<{ tasks: TaskModel[] }>()
@@ -22,14 +23,24 @@ export const TasksArray = () => {
 
     useEffect(() => {
         dragDropContext.registerHandler(`task`, taskActions.moveTask)
-        const quickCreateFunction = registerQuickCreateListener('task-item', (data: { taskIndex: number, taskItemIndex: number}) => {taskActions.createTaskItemAtIndex(data.taskIndex, data.taskItemIndex)})
+        const createShortcutListener = registerShortcutListener('task-item', 'create', (data) => {taskActions.createTaskItemAtIndex(data.taskIndex, data.taskItemIndex)})
+        const deleteShortcutListener = registerShortcutListener('task-item', 'delete', (data) => {taskActions.deleteTaskItem(data.taskIndex, data.taskItemIndex)})
+        const saveShortcutListener = registerShortcutListener('task-item', 'save', (data) => {taskActions.updateTask(data.taskIndex)})
+        const moveUpShortcutListener = registerShortcutListener('task-item', 'moveUp', (data) => {taskActions.moveTaskItemUp(data.taskIndex, data.taskItemIndex)})
+        const moveDownShortcutListener = registerShortcutListener('task-item', 'moveDown', (data) => {taskActions.moveTaskItemDown(data.taskIndex, data.taskItemIndex)})
         const portal = safeCreatePortal(
             <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
             'add-task-placeholder'
         ) 
         setAddTaskPortal(portal)
 
-        return () => unregisterQuickCreateListener(quickCreateFunction);
+        return () => {
+            unregisterShortcutListener(createShortcutListener);
+            unregisterShortcutListener(deleteShortcutListener);
+            unregisterShortcutListener(saveShortcutListener);
+            unregisterShortcutListener(moveUpShortcutListener);
+            unregisterShortcutListener(moveDownShortcutListener);
+        }
     }, [])
 
     const droppableProps: Omit<DragDropDroppableProps, 'children'> = {
