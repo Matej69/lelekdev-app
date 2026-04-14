@@ -235,6 +235,29 @@ export const useRecipes = () => {
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
   }
 
+  const createIngredientAtIndex = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => { 
+      if(recipeIndex == null || sectionIndex == null || ingredientIndex == null)
+          return;
+        let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+        const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
+        const newRecipe: IngredientModel = {
+          id: generateTrackingId(),
+          isNew: true,
+          name: '',
+          amount: '',
+          unit: '',
+          kcal: 0,
+          sortOrder: maxPlus1Or1(ingredients, (ing) => ing.sortOrder),
+          recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
+        }
+        const newRecipes = [...ingredients.slice(0, ingredientIndex + 1), newRecipe, ...ingredients.slice(ingredientIndex + 1)];
+        const normalizedNewRecipes = normalizeIngredientsSortOrder(newRecipes)
+        form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, normalizedNewRecipes, { shouldDirty: true })
+        queueMicrotask(() => {
+          form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.amount`);
+        });
+      };
+
   const deleteIngredient = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => {
     let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
     ingredients.splice(ingredientIndex, 1)
@@ -337,6 +360,28 @@ export const useRecipes = () => {
     form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
   }
 
+  const moveIngredientUp = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => {
+      const ingredients = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
+      if(!ingredients || ingredients.length <= 1 || ingredientIndex <= 0 || ingredientIndex >= ingredients.length) 
+        return;
+      const newIngredients = moveInCollection(ingredients, ingredientIndex, ingredientIndex - 1)
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex - 1}.name`);
+      });
+    }
+
+    const moveIngredientDown = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => {
+      const ingredients = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
+      if(!ingredients || ingredients.length <= 1 || ingredientIndex < 0 || ingredientIndex >= ingredients.length - 1) 
+        return; 
+      const newIngredients = moveInCollection(ingredients, ingredientIndex, ingredientIndex + 1)
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
+      queueMicrotask(() => {        
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.name`);
+      });
+    }
+
 
     return {
       form,
@@ -351,9 +396,12 @@ export const useRecipes = () => {
       toogleSectionLinkEdit,
       moveRecipeSection,
       createIngredient,
+      createIngredientAtIndex,
       deleteIngredient,
       changeIngredientAmount,
       moveRecipeIngredient,
-      duplicateRecipeSection
+      duplicateRecipeSection,
+      moveIngredientUp,
+      moveIngredientDown
     }
 }

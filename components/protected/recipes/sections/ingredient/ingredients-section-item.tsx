@@ -12,6 +12,7 @@ import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/d
 import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/drag-drop/DragDropDraggable";
 import { useContext, useEffect } from "react";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
+import { registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration";
 
 interface IngredientsSectionItemProps {
   sectionIndex: number,

@@ -84,7 +84,7 @@ export const useTasks = () => {
         });
     };
 
-    const createTaskItemAfterIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
+    const createTaskItemAtIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
       if(taskIndex == null || targetTaskItemIndex == null)
           return;
         const newItem: TaskItemModel = {
@@ -219,7 +219,7 @@ export const useTasks = () => {
       updateTask,
       moveTask,
       createTaskItem,
-      createTaskItemAtIndex: createTaskItemAfterIndex,
+      createTaskItemAtIndex,
       deleteTaskItem,
       completeTaskItem,
       changeColorTaskItem,

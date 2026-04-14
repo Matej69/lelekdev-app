@@ -1,6 +1,7 @@
 import { DragDropDraggable, DragDropDraggableProps } from '@/components/common/drag-drop/DragDropDraggable';
 import { DragDropDroppable, DragDropDroppableProps } from '@/components/common/drag-drop/DragDropDroppable';
 import { DragDropHandlerContext } from '@/components/common/drag-drop/DragDropProvider';
+import { registerShortcutListener, unregisterShortcutListener } from '@/components/common/shortcuts-registration/shortcuts-registration';
 import { safeCreatePortal } from '@/components/common/utils';
 import Recipe from '@/components/protected/recipes/recipe';
 import { RecipeModel } from '@/components/protected/recipes/recipe-model';
@@ -30,9 +31,22 @@ export const RecipesArray = (p: RecipesArrayProps) => {
         const portal = safeCreatePortal(
           <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={recipesActions.createRecipe} />, 
           'add-recipe-placeholder'
-      ) 
-      setAddTaskPortal(portal)
+        ) 
+        setAddTaskPortal(portal)
+        const createShortcutListener = registerShortcutListener('recipe-section-ingredient', 'create', (data) => {recipesActions.createIngredientAtIndex(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)}) 
+        const deleteShortcutListener = registerShortcutListener('recipe-section-ingredient', 'delete', (data) => {recipesActions.deleteIngredient(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const saveShortcutListener = registerShortcutListener('recipe-section-ingredient', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
+        const moveUpShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveUp', (data) => {recipesActions.moveIngredientUp(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const moveDownShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveDown', (data) => {recipesActions.moveIngredientDown(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        return () => {      
+          unregisterShortcutListener(createShortcutListener)
+          unregisterShortcutListener(deleteShortcutListener)
+          unregisterShortcutListener(saveShortcutListener)
+          unregisterShortcutListener(moveUpShortcutListener)
+          unregisterShortcutListener(moveDownShortcutListener)
+        }
     }, [])
+
 
     const droppableItemIds = recipes?.map(r => ({ id: `recipe-draggable-${r.id}` })) || []
 

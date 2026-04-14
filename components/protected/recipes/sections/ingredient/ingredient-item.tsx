@@ -7,6 +7,7 @@ import { RecipeSectionType } from "../type";
 import SectionTypeSwitch from "../section-type-switch";
 import { RecipeIngredientSectionModel } from "./recipe-ingredient-section-model";
 import { RecipeTextSectionModel } from "../text/recipe-text-section-model";
+import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
 
 interface IngredientItemProps {
   recipeIndex: number,
@@ -40,8 +41,10 @@ export default function IngredientItem(p: IngredientItemProps) {
   const onDeleteIngredient = () => recipesActions.deleteIngredient(p.recipeIndex, p.sectionIndex, p.ingredientIndex)
   
   const ingredientsError = (form.formState.errors.recipes?.[p.recipeIndex]?.sections?.[p.sectionIndex] as Merge<FieldError, FieldErrorsImpl<NonNullable<RecipeIngredientSectionModel>>>)?.ingredients?.[p.ingredientIndex]
-  
-  return <div className="w-full">
+
+  const dataAttributes = createDataAttributes('recipe-section-ingredient', { recipeIndex: p.recipeIndex, recipeSectionIndex: p.sectionIndex, recipeSectionIngredientIndex: p.ingredientIndex })
+
+  return <div className="w-full" {...dataAttributes}>
     <div className="flex w-full">
       <div>
         <input 
