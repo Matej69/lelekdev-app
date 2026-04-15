@@ -44,10 +44,14 @@ export default function IngredientItem(p: IngredientItemProps) {
 
   const dataAttributes = createDataAttributes('recipe-section-ingredient', { recipeIndex: p.recipeIndex, recipeSectionIndex: p.sectionIndex, recipeSectionIngredientIndex: p.ingredientIndex })
 
+  const { ref } = form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`, {
+  });
+
   return <div className="w-full" {...dataAttributes}>
     <div className="flex w-full">
       <div>
         <input 
+          ref={ref}
           key={form.watch(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // For rerendering since we use 'defaultValue' 
           type="number" inputMode="numeric" className="field-sizing-content" placeholder="Amount"
           defaultValue={form.getValues(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // Used because of onBlur

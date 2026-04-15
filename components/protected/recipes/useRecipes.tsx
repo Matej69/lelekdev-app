@@ -302,6 +302,9 @@ export const useRecipes = () => {
       recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
     })
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
+    queueMicrotask(() => {
+      form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredients.length - 1}.amount`);
+    });
   }
 
   const createIngredientAtIndex = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => { 
@@ -354,6 +357,9 @@ export const useRecipes = () => {
     ingredients = normalizeIngredientsSortOrder(ingredients)
     form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, ingredients, { shouldDirty: true})
     forceFormDirtiness(form, `recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)
+    queueMicrotask(() => {
+      form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex}.amount`);
+    });
   }
 
   const newShallowCopyIngredientFromExisting = (ingredient: IngredientModel, sectionId: string) => {
@@ -457,7 +463,7 @@ export const useRecipes = () => {
       const newIngredients = moveInCollection(ingredients, ingredientIndex, ingredientIndex - 1)
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
       queueMicrotask(() => {
-        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex - 1}.name`);
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex - 1}.amount`);
       });
     }
 
@@ -468,7 +474,7 @@ export const useRecipes = () => {
       const newIngredients = moveInCollection(ingredients, ingredientIndex, ingredientIndex + 1)
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, newIngredients, { shouldDirty: true })
       queueMicrotask(() => {        
-        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.name`);
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.amount`);
       });
     }
 
