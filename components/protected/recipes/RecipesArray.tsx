@@ -33,12 +33,26 @@ export const RecipesArray = (p: RecipesArrayProps) => {
           'add-recipe-placeholder'
         ) 
         setAddTaskPortal(portal)
+        // Recipe section shortcuts
+        const createSectionShortcutListener = registerShortcutListener('recipe-section', 'create', (data) => {recipesActions.createRecipeSectionAtIndex(data.recipeIndex, data.recipeSectionIndex)})
+        const deleteSectionShortcutListener = registerShortcutListener('recipe-section', 'delete', (data) => {recipesActions.deleteRecipeSection(data.recipeIndex, data.recipeSectionIndex)})
+        const saveSectionShortcutListener = registerShortcutListener('recipe-section', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
+        const moveSectionUpShortcutListener = registerShortcutListener('recipe-section', 'moveUp', (data) => {recipesActions.moveRecipeSectionUp(data.recipeIndex, data.recipeSectionIndex)})
+        const moveSectionDownShortcutListener = registerShortcutListener('recipe-section', 'moveDown', (data) => {recipesActions.moveRecipeSectionDown(data.recipeIndex, data.recipeSectionIndex)})
+        // Ingredient shortcuts
         const createShortcutListener = registerShortcutListener('recipe-section-ingredient', 'create', (data) => {recipesActions.createIngredientAtIndex(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)}) 
         const deleteShortcutListener = registerShortcutListener('recipe-section-ingredient', 'delete', (data) => {recipesActions.deleteIngredient(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
         const saveShortcutListener = registerShortcutListener('recipe-section-ingredient', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
         const moveUpShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveUp', (data) => {recipesActions.moveIngredientUp(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
         const moveDownShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveDown', (data) => {recipesActions.moveIngredientDown(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
-        return () => {      
+        return () => {    
+          // Recipe section shortcuts
+          unregisterShortcutListener(createSectionShortcutListener)
+          unregisterShortcutListener(deleteSectionShortcutListener)
+          unregisterShortcutListener(saveSectionShortcutListener)
+          unregisterShortcutListener(moveSectionUpShortcutListener)
+          unregisterShortcutListener(moveSectionDownShortcutListener)
+          // Ingredient shortcuts  
           unregisterShortcutListener(createShortcutListener)
           unregisterShortcutListener(deleteShortcutListener)
           unregisterShortcutListener(saveShortcutListener)

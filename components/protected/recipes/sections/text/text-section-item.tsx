@@ -7,6 +7,7 @@ import { RecipeSectionModel } from "../recipe-section-schema";
 import { RecipeTextSectionModel } from "./recipe-text-section-model";
 import SectionTypeSwitch from "../section-type-switch";
 import { RecipeSectionType } from "../type";
+import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
 
 interface TextSectionItemProps {
   sectionIndex: number,
@@ -23,8 +24,10 @@ export default function TextSectionItem(p: TextSectionItemProps) {
   const onChangeRecipeSectionType = (type: RecipeSectionType) => { recipesActions.changeRecipeSectionType(p.recipeIndex, p.sectionIndex, type) }
   const onDuplicateRecipeSection = () => { recipesActions.duplicateRecipeSection(p.recipeIndex, p.sectionIndex) }
 
+  const dataAttributes = createDataAttributes('recipe-section', { recipeIndex: p.recipeIndex, recipeSectionIndex: p.sectionIndex })
+
   return (
-    <div className="flex flex-col bg-white p-2 gap-1">
+    <div className="flex flex-col bg-white p-2 gap-1" {...dataAttributes}>
         { /* Title and actions */ }
         <div className="flex items-center gap-1">
           <div className="grow">

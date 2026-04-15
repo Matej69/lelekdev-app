@@ -5,6 +5,10 @@ const dataAttributesTypeRegister = {
       taskIndex: z.number(),
       taskItemIndex: z.number()
     }),
+  'recipe-section': z.object({
+    recipeIndex: z.number(),
+    recipeSectionIndex: z.number(),
+  }),
   'recipe-section-ingredient': z.object({
       recipeIndex: z.number(),
       recipeSectionIndex: z.number(),

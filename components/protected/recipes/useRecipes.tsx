@@ -123,6 +123,30 @@ export const useRecipes = () => {
       form.setValue(`recipes.${recipeIndex}`, recipe, { shouldDirty: true })
     }
 
+    const createRecipeSectionAtIndex = (recipeIndex: number, sectionIndex: number) => {
+      if(recipeIndex == null || sectionIndex == null)
+        return;
+      const recipeId = form.getValues(`recipes.${recipeIndex}.id`)
+      const sections = form.getValues(`recipes.${recipeIndex}.sections`)
+      const newSection: RecipeSectionModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        recipeId: recipeId,
+        type: 'TEXT',
+        title: '',
+        content: '',
+        sortOrder: maxPlus1Or1(sections, (s) => s.sortOrder)
+      }
+      const newSections = [...sections.slice(0, sectionIndex + 1), newSection, ...sections.slice(sectionIndex + 1)];
+        const normalizedNewRecipes = normalizeRecipeSectionsSortOrder(newSections)
+        form.setValue(`recipes.${recipeIndex}.sections`, normalizedNewRecipes, { shouldDirty: true })
+        queueMicrotask(() => {
+          form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex + 1}.title`);
+        }); 
+    }
+
+
+
     const deleteRecipeSection = (recipeIndex: number, sectionIndex: number) => {
       const newSections = [...form.getValues('recipes')[recipeIndex].sections]
       newSections.splice(sectionIndex, 1)
@@ -218,6 +242,29 @@ export const useRecipes = () => {
         }
       }
     }
+
+    const moveRecipeSectionUp = (recipeIndex: number, sectionIndex: number) => {
+      const sections = form.getValues(`recipes.${recipeIndex}.sections`)
+      if(!sections || sections.length <= 1 || sectionIndex <= 0 || sectionIndex >= sections.length) 
+        return;
+      const newSections = moveInCollection(sections, sectionIndex, sectionIndex - 1)
+      form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex - 1}.title`);
+      });
+    }
+
+    const moveRecipeSectionDown = (recipeIndex: number, sectionIndex: number) => {
+      const sections = form.getValues(`recipes.${recipeIndex}.sections`)
+      if(!sections || sections.length <= 1 || sectionIndex < 0 || sectionIndex >= sections.length - 1)
+        return;
+      const newSections = moveInCollection(sections, sectionIndex, sectionIndex + 1)
+      form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex + 1}.title`);
+      });
+    }
+
 
   const createIngredient = (recipeIndex: number, sectionIndex: number) => {
     let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
@@ -395,6 +442,8 @@ export const useRecipes = () => {
       changeRecipeSectionType,
       toogleSectionLinkEdit,
       moveRecipeSection,
+      moveRecipeSectionUp,
+      moveRecipeSectionDown,
       createIngredient,
       createIngredientAtIndex,
       deleteIngredient,
@@ -402,6 +451,7 @@ export const useRecipes = () => {
       moveRecipeIngredient,
       duplicateRecipeSection,
       moveIngredientUp,
-      moveIngredientDown
+      moveIngredientDown,
+      createRecipeSectionAtIndex
     }
 }

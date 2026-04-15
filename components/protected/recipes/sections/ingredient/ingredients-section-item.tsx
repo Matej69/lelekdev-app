@@ -12,7 +12,7 @@ import { DragDropDroppable, DragDropDroppableProps } from "@/components/common/d
 import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/drag-drop/DragDropDraggable";
 import { useContext, useEffect } from "react";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
-import { registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration";
+import { createDataAttributes, registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration";
 
 interface IngredientsSectionItemProps {
   sectionIndex: number,
@@ -64,9 +64,11 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
     containerId: section.id,
     item: ingredient,
   });
+
+  const dataAttributes = createDataAttributes('recipe-section', { recipeIndex: p.recipeIndex, recipeSectionIndex: p.sectionIndex })
   
   return (
-     <div className="flex flex-col bg-white p-2 gap-1">
+     <div className="flex flex-col bg-white p-2 gap-1" {...dataAttributes}>
          { /* Title and actions */ }
          <div className="flex items-center gap-1">
            <div className="grow">
