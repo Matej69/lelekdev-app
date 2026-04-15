@@ -26,6 +26,7 @@ export const TasksArray = () => {
         const createShortcutListener = registerShortcutListener('task-item', 'create', (data) => {taskActions.createTaskItemAtIndex(data.taskIndex, data.taskItemIndex)})
         const deleteShortcutListener = registerShortcutListener('task-item', 'delete', (data) => {taskActions.deleteTaskItem(data.taskIndex, data.taskItemIndex)})
         const saveShortcutListener = registerShortcutListener('task-item', 'save', (data) => {taskActions.updateTask(data.taskIndex)})
+        const duplicateShortcutListener = registerShortcutListener('task-item', 'duplicate', (data) => {taskActions.duplicateTaskItemAtIndex(data.taskIndex, data.taskItemIndex)})
         const moveUpShortcutListener = registerShortcutListener('task-item', 'moveUp', (data) => {taskActions.moveTaskItemUp(data.taskIndex, data.taskItemIndex)})
         const moveDownShortcutListener = registerShortcutListener('task-item', 'moveDown', (data) => {taskActions.moveTaskItemDown(data.taskIndex, data.taskItemIndex)})
         const portal = safeCreatePortal(
@@ -40,6 +41,7 @@ export const TasksArray = () => {
             unregisterShortcutListener(saveShortcutListener);
             unregisterShortcutListener(moveUpShortcutListener);
             unregisterShortcutListener(moveDownShortcutListener);
+            unregisterShortcutListener(duplicateShortcutListener);
         }
     }, [])
 

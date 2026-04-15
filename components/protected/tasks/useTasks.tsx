@@ -87,21 +87,43 @@ export const useTasks = () => {
     const createTaskItemAtIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
       if(taskIndex == null || targetTaskItemIndex == null)
           return;
-        const newItem: TaskItemModel = {
-          id: generateTrackingId(),
-          isNew: true,
-          content: "",
-          completed: false,
-          sortOrder: 0 // Doesnt matter for now, normalization will assign it
-        }
-        const items = form.getValues(`tasks.${taskIndex}.items`)
-        const newItems = [...items.slice(0, targetTaskItemIndex + 1), newItem, ...items.slice(targetTaskItemIndex + 1)];
-        const normalizedNewItems = normalizeTaskItemsSortOrder(newItems)
-        form.setValue(`tasks.${taskIndex}.items`, normalizedNewItems, { shouldDirty: true })
-        queueMicrotask(() => {
-          form.setFocus(`tasks.${taskIndex}.items.${targetTaskItemIndex + 1}.content`);
-        });
-      };
+      const newItem: TaskItemModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        content: "",
+        completed: false,
+        sortOrder: 0 // Doesnt matter for now, normalization will assign it
+      }
+      const items = form.getValues(`tasks.${taskIndex}.items`)
+      const newItems = [...items.slice(0, targetTaskItemIndex + 1), newItem, ...items.slice(targetTaskItemIndex + 1)];
+      const normalizedNewItems = normalizeTaskItemsSortOrder(newItems)
+      form.setValue(`tasks.${taskIndex}.items`, normalizedNewItems, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`tasks.${taskIndex}.items.${targetTaskItemIndex + 1}.content`);
+      });
+    };
+
+    const duplicateTaskItemAtIndex = (taskIndex: number, targetTaskItemIndex: number) => { 
+      if(taskIndex == null || targetTaskItemIndex == null)
+          return;
+      const itemToDuplicate = form.getValues(`tasks.${taskIndex}.items.${targetTaskItemIndex}`)
+      if(!itemToDuplicate)
+        return;
+      const newItem: TaskItemModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        content: itemToDuplicate.content,
+        completed: false,
+        sortOrder: 0 // Doesnt matter for now, normalization will assign it
+      }
+      const items = form.getValues(`tasks.${taskIndex}.items`)
+      const newItems = [...items.slice(0, targetTaskItemIndex + 1), newItem, ...items.slice(targetTaskItemIndex + 1)];
+      const normalizedNewItems = normalizeTaskItemsSortOrder(newItems)
+      form.setValue(`tasks.${taskIndex}.items`, normalizedNewItems, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`tasks.${taskIndex}.items.${targetTaskItemIndex + 1}.content`);
+      });
+    };
 
     const deleteTaskItem = (taskIndex: number, taskItemIndex: number) => {
       let items = [...form.getValues(`tasks.${taskIndex}.items`)]
@@ -220,6 +242,7 @@ export const useTasks = () => {
       moveTask,
       createTaskItem,
       createTaskItemAtIndex,
+      duplicateTaskItemAtIndex,
       deleteTaskItem,
       completeTaskItem,
       changeColorTaskItem,

@@ -24,6 +24,7 @@ const keyboardShortcuts = {
   create: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "Enter",
   delete: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "Delete",
   save: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "s",
+  duplicate: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "x",
   moveUp: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "ArrowUp",
   moveDown: (e: KeyboardEvent) => (e.altKey || e.ctrlKey) && e.key === "ArrowDown"
 }

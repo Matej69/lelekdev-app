@@ -39,12 +39,14 @@ export const RecipesArray = (p: RecipesArrayProps) => {
         const saveSectionShortcutListener = registerShortcutListener('recipe-section', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
         const moveSectionUpShortcutListener = registerShortcutListener('recipe-section', 'moveUp', (data) => {recipesActions.moveRecipeSectionUp(data.recipeIndex, data.recipeSectionIndex)})
         const moveSectionDownShortcutListener = registerShortcutListener('recipe-section', 'moveDown', (data) => {recipesActions.moveRecipeSectionDown(data.recipeIndex, data.recipeSectionIndex)})
+        const duplicateSectionShortcutListener = registerShortcutListener('recipe-section', 'duplicate', (data) => {recipesActions.duplicateRecipeSectionAtIndex(data.recipeIndex, data.recipeSectionIndex)})
         // Ingredient shortcuts
-        const createShortcutListener = registerShortcutListener('recipe-section-ingredient', 'create', (data) => {recipesActions.createIngredientAtIndex(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)}) 
-        const deleteShortcutListener = registerShortcutListener('recipe-section-ingredient', 'delete', (data) => {recipesActions.deleteIngredient(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
-        const saveShortcutListener = registerShortcutListener('recipe-section-ingredient', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
-        const moveUpShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveUp', (data) => {recipesActions.moveIngredientUp(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
-        const moveDownShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveDown', (data) => {recipesActions.moveIngredientDown(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const createIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'create', (data) => {recipesActions.createIngredientAtIndex(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)}) 
+        const deleteIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'delete', (data) => {recipesActions.deleteIngredient(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const saveIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'save', (data) => {recipesActions.updateRecipe(data.recipeIndex)})
+        const moveUpIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveUp', (data) => {recipesActions.moveIngredientUp(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const moveDownIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'moveDown', (data) => {recipesActions.moveIngredientDown(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
+        const duplicateIngredientShortcutListener = registerShortcutListener('recipe-section-ingredient', 'duplicate', (data) => {recipesActions.duplicateIngredientAtIndex(data.recipeIndex, data.recipeSectionIndex, data.recipeSectionIngredientIndex)})
         return () => {    
           // Recipe section shortcuts
           unregisterShortcutListener(createSectionShortcutListener)
@@ -52,12 +54,14 @@ export const RecipesArray = (p: RecipesArrayProps) => {
           unregisterShortcutListener(saveSectionShortcutListener)
           unregisterShortcutListener(moveSectionUpShortcutListener)
           unregisterShortcutListener(moveSectionDownShortcutListener)
+          unregisterShortcutListener(duplicateSectionShortcutListener)
           // Ingredient shortcuts  
-          unregisterShortcutListener(createShortcutListener)
-          unregisterShortcutListener(deleteShortcutListener)
-          unregisterShortcutListener(saveShortcutListener)
-          unregisterShortcutListener(moveUpShortcutListener)
-          unregisterShortcutListener(moveDownShortcutListener)
+          unregisterShortcutListener(createIngredientShortcutListener)
+          unregisterShortcutListener(deleteIngredientShortcutListener)
+          unregisterShortcutListener(saveIngredientShortcutListener)
+          unregisterShortcutListener(moveUpIngredientShortcutListener)
+          unregisterShortcutListener(moveDownIngredientShortcutListener)
+          unregisterShortcutListener(duplicateIngredientShortcutListener)
         }
     }, [])
 

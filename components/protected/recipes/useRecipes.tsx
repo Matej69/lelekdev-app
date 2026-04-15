@@ -145,6 +145,25 @@ export const useRecipes = () => {
         }); 
     }
 
+    const duplicateRecipeSectionAtIndex = (recipeIndex: number, sectionIndex: number) => {
+      if(recipeIndex == null || sectionIndex == null)
+        return;
+      const sections = form.getValues(`recipes.${recipeIndex}.sections`)
+      const newSection: RecipeSectionModel = {
+        ...structuredClone(sections[sectionIndex]),
+        id: generateTrackingId(),
+        isNew: true,
+        sortOrder: 0, // Doesnt matter for now, normalization will assign it
+        ...(sections[sectionIndex].type == 'INGREDIENTS' && { ingredients: sections[sectionIndex].ingredients.map(ingr => ({...ingr, id: generateTrackingId(), isNew: true})) })
+      }
+      const newSections = [...sections.slice(0, sectionIndex + 1), newSection, ...sections.slice(sectionIndex + 1)];
+      const normalizedNewRecipes = normalizeRecipeSectionsSortOrder(newSections)
+      form.setValue(`recipes.${recipeIndex}.sections`, normalizedNewRecipes, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex + 1}.title`);
+      }); 
+    }
+
 
 
     const deleteRecipeSection = (recipeIndex: number, sectionIndex: number) => {
@@ -152,6 +171,9 @@ export const useRecipes = () => {
       newSections.splice(sectionIndex, 1)
       form.setValue(`recipes.${recipeIndex}.sections`, newSections, { shouldDirty: true })
       forceFormDirtiness(form, `recipes.${recipeIndex}.sections`)
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.title`);
+      });
     }
 
     const changeRecipeSectionType = (recipeIndex: number, sectionIndex: number, newType: RecipeSectionType) => {
@@ -283,27 +305,48 @@ export const useRecipes = () => {
   }
 
   const createIngredientAtIndex = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => { 
-      if(recipeIndex == null || sectionIndex == null || ingredientIndex == null)
-          return;
-        let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
-        const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
-        const newRecipe: IngredientModel = {
-          id: generateTrackingId(),
-          isNew: true,
-          name: '',
-          amount: '',
-          unit: '',
-          kcal: 0,
-          sortOrder: maxPlus1Or1(ingredients, (ing) => ing.sortOrder),
-          recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
-        }
-        const newRecipes = [...ingredients.slice(0, ingredientIndex + 1), newRecipe, ...ingredients.slice(ingredientIndex + 1)];
-        const normalizedNewRecipes = normalizeIngredientsSortOrder(newRecipes)
-        form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, normalizedNewRecipes, { shouldDirty: true })
-        queueMicrotask(() => {
-          form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.amount`);
-        });
-      };
+    if(recipeIndex == null || sectionIndex == null || ingredientIndex == null)
+        return;
+      let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+      const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
+      const newIngredient: IngredientModel = {
+        id: generateTrackingId(),
+        isNew: true,
+        name: '',
+        amount: '',
+        unit: '',
+        kcal: 0,
+        sortOrder: maxPlus1Or1(ingredients, (ing) => ing.sortOrder),
+        recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
+      }
+      const newIngredients = [...ingredients.slice(0, ingredientIndex + 1), newIngredient, ...ingredients.slice(ingredientIndex + 1)];
+      const normalizedNewIngredients = normalizeIngredientsSortOrder(newIngredients)
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, normalizedNewIngredients, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.amount`);
+      });
+    };
+
+    const duplicateIngredientAtIndex = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => { 
+    if(recipeIndex == null || sectionIndex == null || ingredientIndex == null)
+        return;
+      let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
+      const sectionId = form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.id`)
+      const newIngredient: IngredientModel = {
+        ...ingredients[ingredientIndex],
+        id: generateTrackingId(),
+        isNew: true,
+        sortOrder: 0, // Doesnt matter for now, normalization will assign it
+        recipeSectionId: sectionId.startsWith('[new]') ? null : sectionId
+      }
+      const newIngredients = [...ingredients.slice(0, ingredientIndex + 1), newIngredient, ...ingredients.slice(ingredientIndex + 1)];
+      const normalizedNewIngredients = normalizeIngredientsSortOrder(newIngredients)
+      form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`, normalizedNewIngredients, { shouldDirty: true })
+      queueMicrotask(() => {
+        form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients.${ingredientIndex + 1}.amount`);
+      });
+    };
+
 
   const deleteIngredient = (recipeIndex: number, sectionIndex: number, ingredientIndex: number) => {
     let ingredients = [...form.getValues(`recipes.${recipeIndex}.sections.${sectionIndex}.ingredients`)]
@@ -446,12 +489,14 @@ export const useRecipes = () => {
       moveRecipeSectionDown,
       createIngredient,
       createIngredientAtIndex,
+      duplicateIngredientAtIndex,
       deleteIngredient,
       changeIngredientAmount,
       moveRecipeIngredient,
       duplicateRecipeSection,
       moveIngredientUp,
       moveIngredientDown,
-      createRecipeSectionAtIndex
+      createRecipeSectionAtIndex,
+      duplicateRecipeSectionAtIndex
     }
 }
