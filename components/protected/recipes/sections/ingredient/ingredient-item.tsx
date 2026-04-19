@@ -50,7 +50,7 @@ export default function IngredientItem(p: IngredientItemProps) {
 
   return <div className="w-full" {...dataAttributes}>
     <div className="flex w-full">
-      <div>
+      <div className="overflow-hidden">
         <input 
           ref={ref}
           key={form.watch(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // For rerendering since we use 'defaultValue' 
@@ -59,10 +59,10 @@ export default function IngredientItem(p: IngredientItemProps) {
           onBlur = { (e) => {onChangeIngredientAmount(e, p.ingredientIndex)} } // Update is not done onChange since linked ingredient update goes nuts
         />
       </div>
-      <div className="">
+      <div className="overflow-hidden">
         <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.unit`)} placeholder="Unit" aria-label="Ingredient unit"/>
       </div>
-      <div className="grow">
+      <div className="grow overflow-hidden">
         <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.name`)} placeholder="Name" aria-label="Ingredient name"/>
       </div>
       <div className="">
