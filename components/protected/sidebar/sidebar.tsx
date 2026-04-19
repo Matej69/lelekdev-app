@@ -1,6 +1,7 @@
 'use client';
 
 import { ListTodo, UtensilsCrossed } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 const navigationItemsData = [
@@ -34,10 +35,10 @@ export default function Sidebar() {
             { /* Navigation items */}
             {
                 navigationItemsData.map(({name, icon: Icon, redirectTo}) => (
-                    <div className="flex items-center w-full gap-2 pl-7 group cursor-pointer" key={name} onClick={() => router.push(redirectTo)}>
+                    <Link key={name} href={redirectTo} aria-label={name} className="flex items-center w-full gap-2 pl-7 group cursor-pointer">
                         <Icon className={getIconColor(redirectTo, pathname) + ' transition-colors'} />
                         <p className={getTextColor(redirectTo, pathname) + ' text-lg font-bold transition-colors'}>{name}</p>    
-                    </div>
+                    </Link>
                 ))
             }
         </div>

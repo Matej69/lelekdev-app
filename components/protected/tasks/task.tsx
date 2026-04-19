@@ -20,6 +20,7 @@ import { DragDropDraggable, DragDropDraggableProps } from "../../common/drag-dro
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 import { createPortal } from "react-dom";
 import { useUserContext } from "../user/userContext/UserContext";
+import { IconButton } from "@/components/common/IconButton";
 
 
 interface TaskProps {
@@ -84,18 +85,18 @@ export default function Task(p: TaskProps) {
           <div className="flex grow">
              <Dot /> 
              <div>
-              <input {...form.register(`tasks.${p.index}.title`)}></input>
+              <input {...form.register(`tasks.${p.index}.title`)} placeholder="Task title"></input>
               { errors?.title?.message &&  <p className="text-red-500 pl-1">{errors?.title?.message}</p>}
              </div>
           </div>
           {/* Actions */}
           <div className="flex items-center group hover:cursor-pointer gap-3">
-            <Popover trigger={<Paintbrush className="cursor-pointer"/>}>
+            <Popover trigger={<IconButton icon={'color-picker'} aria-label="Change task color" style={{ display: 'flex' }} />}>
                 <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorSelect}/>
             </Popover>
-              <CopyPlus className="cursor-pointer" onClick={onTaskCreateItem} />
-              <Save className="cursor-pointer" onClick={onTaskUpdate} color={isAnyFieldDirty ? "black" : "gray"}/>
-              <Trash2 className="cursor-pointer" onClick={onTaskDelete} />
+              <IconButton icon={'add'} onClick={onTaskCreateItem} aria-label="Create task item" />
+              <IconButton icon={'save'} onClick={onTaskUpdate} aria-label="Save task" iconProps={{ color: isAnyFieldDirty ? "black" : "gray" }} />
+              <IconButton icon={'delete'} onClick={onTaskDelete} aria-label="Delete task" />
           </div>
         </div>
         {/* Task items */}

@@ -20,15 +20,17 @@ export default function SectionTypeSwitch(p: SectionTypeSwitchProps) {
   const getIconBackgroundColor = (type: RecipeSectionType) => selectedType == type ? 'white' : '#eee'
   const getIconColor = (type: RecipeSectionType) => selectedType == type ? 'black' : '#ccc'
 
+  const ariaLabel = `Switch recipe section type from ${p.defaultType} to ${p.defaultType === 'TEXT' ? 'INGREDIENTS' : 'TEXT'}`
+
   return(
-    <div className="flex border border-gray-300 rounded cursor-pointer" onClick={onChange}>
+    <button aria-label={ariaLabel} className="flex border border-gray-300 rounded cursor-pointer" onClick={onChange}>
         <div className="p-1" style={{ background: getIconBackgroundColor('TEXT') }}>
             <ClipboardType strokeWidth="2" color={getIconColor('TEXT')}/>
         </div>
         <div className="p-1" style={{ background: getIconBackgroundColor('INGREDIENTS') }}>
             <ClipboardList strokeWidth="2" color={getIconColor('INGREDIENTS')}/>
         </div>
-   </div>
+   </button>
 
   ) 
 }

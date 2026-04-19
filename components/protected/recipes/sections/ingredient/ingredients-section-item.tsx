@@ -1,4 +1,4 @@
-import { CircleCheck, Copy, CopyPlus, PencilRuler, Plus, Trash2 } from "lucide-react";
+import { CircleCheck, Copy, CopyPlus, Icon, PencilRuler, Plus, Trash2 } from "lucide-react";
 import AutosizeTextarea from "@/components/common/AutosizeTextarea";
 import { FieldError, FieldErrorsImpl, Merge, useFormContext, UseFormReturn, useWatch } from "react-hook-form";
 import { RecipeModel } from "../../recipe-model";
@@ -13,6 +13,7 @@ import { DragDropDraggable, DragDropDraggableProps } from "@/components/common/d
 import { useContext, useEffect } from "react";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 import { createDataAttributes, registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration";
+import { IconButton } from "@/components/common/IconButton";
 
 interface IngredientsSectionItemProps {
   sectionIndex: number,
@@ -65,6 +66,11 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
     item: ingredient,
   });
 
+  const linkUpdateProps = {
+    ariaLabel: section.linkedAmountUpdate ? "Unlink ingredient amounts" : "Link ingredient amounts",
+    color: section.linkedAmountUpdate ? "black" : "#bababa",
+  }
+
   const dataAttributes = createDataAttributes('recipe-section', { recipeIndex: p.recipeIndex, recipeSectionIndex: p.sectionIndex })
   
   return (
@@ -72,14 +78,14 @@ export default function IngredientsSectionItem(p: IngredientsSectionItemProps) {
          { /* Title and actions */ }
          <div className="flex items-center gap-1">
            <div className="grow">
-             <input className="font-bold" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.title`)} placeholder="Enter title"/>
+             <input className="font-bold" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.title`)} placeholder="Recipe ingredient section title"/>
              { sectionErrors?.title?.message && <p className="text-red-500 px-1 bold">{sectionErrors.title.message}</p>}
            </div>
-           <CopyPlus className="cursor-pointer" onClick={onCreateIngredient} />
-           <Copy className="cursor-pointer" onClick={onDuplicateRecipeSection}/>
-           <PencilRuler size={26} className="cursor-pointer" onClick={onChangeSectionLinkEdit} color={section.linkedAmountUpdate ? "black" : "#bababa"} />
+           <IconButton icon='add' onClick={onCreateIngredient} aria-label="Add ingredient" />
+           <IconButton icon='duplicate' onClick={onDuplicateRecipeSection} aria-label="Duplicate recipe section" />
+           <IconButton icon='linkEdit' onClick={onChangeSectionLinkEdit} aria-label={linkUpdateProps.ariaLabel} iconProps={{ color: linkUpdateProps.color }}  />
            <SectionTypeSwitch defaultType="INGREDIENTS" onChange={onChangeRecipeSectionType}></SectionTypeSwitch>
-           <Trash2 size={26} className="cursor-pointer"  onClick={onSectionDelete} />
+           <IconButton icon='delete' onClick={onSectionDelete} aria-label="Delete recipe section" />
          </div>
          { /* Ingredients */ }
         <DragDropDroppable {...droppableProps} style={{ minHeight: '1.7rem', background: 'white' }}>

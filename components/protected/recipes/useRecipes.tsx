@@ -182,6 +182,10 @@ export const useRecipes = () => {
         (section as RecipeIngredientSectionModel).ingredients = []
       }
       form.setValue(`recipes.${recipeIndex}.sections.${sectionIndex}.type`, newType, { shouldDirty: true })
+      queueMicrotask(() => {
+        if(newType == 'INGREDIENTS')
+          form.setFocus(`recipes.${recipeIndex}.sections.${sectionIndex}.content`);
+      });
     }
 
     const toogleSectionLinkEdit = (recipeIndex: number, sectionIndex: number) => {

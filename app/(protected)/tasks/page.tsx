@@ -41,7 +41,7 @@ export default function TasksPage() {
 
 
   return (
-    <div className="flex flex-col h-full font-sans gap-6">
+    <div className="flex flex-col h-full font-sans gap-4">
       <div className="flex justify-center items-center">
         <h1 className="text-5xl font-bold grow">Tasks</h1>
         <div id="add-task-placeholder"></div>

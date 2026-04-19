@@ -8,6 +8,7 @@ import { RecipeTextSectionModel } from "./recipe-text-section-model";
 import SectionTypeSwitch from "../section-type-switch";
 import { RecipeSectionType } from "../type";
 import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
+import { IconButton } from "@/components/common/IconButton";
 
 interface TextSectionItemProps {
   sectionIndex: number,
@@ -31,19 +32,19 @@ export default function TextSectionItem(p: TextSectionItemProps) {
         { /* Title and actions */ }
         <div className="flex items-center gap-1">
           <div className="grow">
-            <input className="font-bold" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.title`)} placeholder="Enter title"/>
+            <input className="font-bold" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.title`)} placeholder="Recipe text section title"/>
             {
               errors?.title?.message && 
               <p className="text-red-500 px-1 bold">{errors.title.message}</p>
             }
           </div>
-          <Copy className="cursor-pointer" onClick={onDuplicateRecipeSection}/>
+          <IconButton icon='duplicate' onClick={onDuplicateRecipeSection} aria-label="Duplicate recipe section" />
           <SectionTypeSwitch defaultType="TEXT" onChange={onChangeRecipeSectionType}></SectionTypeSwitch>
-          <Trash2 size={26} className=" cursor-pointer" onClick={onSectionDelete} />
+          <IconButton icon='delete' onClick={onSectionDelete} aria-label="Delete recipe section" />
         </div>
         { /* Content */ }
         <div className="flex flex-col items-start gap-2">
-          <AutosizeTextarea placeholder="Enter content" register={form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.content`)} />
+          <AutosizeTextarea placeholder="Enter recipe section content" register={form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.content`)} />
           {
             errors?.content?.message && 
             <p className="text-red-500 px-1">{errors.content.message}</p>

@@ -10,6 +10,7 @@ import { ReactPortal, useContext, useEffect, useState } from "react"
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider"
 import { registerShortcutListener, unregisterShortcutListener } from "@/components/common/shortcuts-registration/shortcuts-registration"
 import { safeCreatePortal } from "@/components/common/utils"
+import { IconButton } from "@/components/common/IconButton"
 
 export const TasksArray = () => {
     const form = useFormContext<{ tasks: TaskModel[] }>()
@@ -30,7 +31,7 @@ export const TasksArray = () => {
         const moveUpShortcutListener = registerShortcutListener('task-item', 'moveUp', (data) => {taskActions.moveTaskItemUp(data.taskIndex, data.taskItemIndex)})
         const moveDownShortcutListener = registerShortcutListener('task-item', 'moveDown', (data) => {taskActions.moveTaskItemDown(data.taskIndex, data.taskItemIndex)})
         const portal = safeCreatePortal(
-            <CopyPlus size={52} className="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white" onClick={taskActions.createTask} />, 
+            <IconButton icon='add' onClick={taskActions.createTask} aria-label="Add task" iconProps={{ size: 50 }} iconClassName="ml-4 border border-gray-300 rounded cursor-pointer p-2 bg-white"/>, 
             'add-task-placeholder'
         ) 
         setAddTaskPortal(portal)

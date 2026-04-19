@@ -22,6 +22,7 @@ import { useRecipes } from "./useRecipes";
 import RecipeSectionItem from "./sections/section-item";
 import { DragDropHandlerContext } from "@/components/common/drag-drop/DragDropProvider";
 import { useDndMonitor } from "@dnd-kit/core";
+import { IconButton } from "@/components/common/IconButton";
 
 
 interface RecipeProps {
@@ -84,18 +85,18 @@ export default function Recipe(p: RecipeProps) {
           <div className="flex grow">
              <Dot />
              <div>
-              <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name..."></input>
+              <input {...form.register(`recipes.${p.recipeIndex}.name`)} placeholder="Recipe name"></input>
               { errors?.name?.message &&  <p className="text-red-500 pl-1">{errors?.name?.message}</p>}
              </div>
           </div>
           {/* Actions */}
           <div className="flex items-center group hover:cursor-pointer gap-3">
-            <Popover trigger={<Paintbrush className="cursor-pointer"/>}>
+            <Popover trigger={<IconButton icon={'color-picker'} aria-label="Change recipe color" style={{ display: 'flex' }} />}>
                 <ColorPicker className="grid grid-cols-4 gap-1" hexColors={Object.values(taskColors)} onColorSelect={onColorSelect}/>
             </Popover>
-              { <CopyPlus className="cursor-pointer" onClick={onRecipeCreateSection} /> }
-              <Save className="cursor-pointer" onClick={onRecipeUpdate} color={isAnyFieldDirty ? "black" : "gray"}/>
-              <Trash2 className="cursor-pointer" onClick={onRecipeDelete} />
+              <IconButton icon='add' onClick={onRecipeCreateSection} aria-label="Add recipe section" />
+              <IconButton icon='save' onClick={onRecipeUpdate} aria-label="Save recipe" iconProps={{ color: isAnyFieldDirty ? "black" : "gray" }} />
+              <IconButton icon='delete' onClick={onRecipeDelete} aria-label="Delete recipe" />
           </div>
         </div>
         {/* Recipe sections */}    

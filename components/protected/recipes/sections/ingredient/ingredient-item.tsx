@@ -8,6 +8,7 @@ import SectionTypeSwitch from "../section-type-switch";
 import { RecipeIngredientSectionModel } from "./recipe-ingredient-section-model";
 import { RecipeTextSectionModel } from "../text/recipe-text-section-model";
 import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
+import { IconButton } from "@/components/common/IconButton";
 
 interface IngredientItemProps {
   recipeIndex: number,
@@ -53,19 +54,19 @@ export default function IngredientItem(p: IngredientItemProps) {
         <input 
           ref={ref}
           key={form.watch(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // For rerendering since we use 'defaultValue' 
-          type="number" inputMode="numeric" className="field-sizing-content" placeholder="Amount"
+          type="number" inputMode="numeric" className="field-sizing-content" placeholder="Amount" aria-label="Ingredient amount"
           defaultValue={form.getValues(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.amount`)} // Used because of onBlur
           onBlur = { (e) => {onChangeIngredientAmount(e, p.ingredientIndex)} } // Update is not done onChange since linked ingredient update goes nuts
         />
       </div>
       <div className="">
-        <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.unit`)} placeholder="Unit"/>
+        <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.unit`)} placeholder="Unit" aria-label="Ingredient unit"/>
       </div>
       <div className="grow">
-        <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.name`)} placeholder="Name"/>
+        <input className="field-sizing-content" {...form.register(`recipes.${p.recipeIndex}.sections.${p.sectionIndex}.ingredients.${p.ingredientIndex}.name`)} placeholder="Name" aria-label="Ingredient name"/>
       </div>
       <div className="">
-        <Trash2 size={26} className="cursor-pointer" onClick={onDeleteIngredient}/>
+        <IconButton icon='delete' onClick={onDeleteIngredient} aria-label="Delete ingredient" />
       </div>
     </div>
         { ingredientsError?.amount?.message && <p className="pl-1 text-red-500 px-1 bold">{ingredientsError.amount.message}</p>}

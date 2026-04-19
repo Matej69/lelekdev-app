@@ -6,6 +6,7 @@ import { TaskModel } from "../model";
 import { useTasks } from "../useTasks";
 import { completionTaskItemMarkColor } from "./constants";
 import { createDataAttributes } from "@/components/common/shortcuts-registration/shortcuts-registration";
+import { IconButton } from "@/components/common/IconButton";
 
 interface TaskItemProps {
   index: number,
@@ -24,12 +25,14 @@ export default function TaskItem(p: TaskItemProps) {
 
   const dataAttributes = createDataAttributes('task-item', { taskIndex: p.taskIndex, taskItemIndex: p.index })
 
+  const checkmarkAriaLabel = p.data.completed ? "Mark as not completed" : "Mark as completed"
+
   return (
     <div className="flex flex-col bg-white p-2" {...dataAttributes}>
       <div className="flex items-center gap-2">
-        <CircleCheck color={completionColor} size={30} className="mr-2 cursor-pointer" onClick={onCompleteTaskItem}/>
-        <AutosizeTextarea placeholder="Enter content" register={form.register(`tasks.${p.taskIndex}.items.${p.index}.content`)} />
-        <Trash2 size={30} className=" cursor-pointer" onClick={onDeleteTaskItem} />
+        <IconButton icon='checkmark' onClick={onCompleteTaskItem} aria-label={checkmarkAriaLabel} iconProps={{ color: completionColor, size: 28 }} />
+        <AutosizeTextarea placeholder="Enter task content" register={form.register(`tasks.${p.taskIndex}.items.${p.index}.content`)} />
+        <IconButton icon='delete' onClick={onDeleteTaskItem} aria-label="Delete task item" />
       </div>
       {
         errors?.content?.message && 
