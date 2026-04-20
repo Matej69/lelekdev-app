@@ -31,11 +31,11 @@ export default function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <div className="flex flex-col items-start w-60 h-full max-h-screen p-4 gap-4 bg-white overflow-y-auto border shadow-[8px_8px_0_black]">
+        <div className="flex flex-row sm:flex-col items-start w-full sm:w-60 sm:h-full sm:max-h-screen p-4 gap-4 bg-white overflow-y-auto border shadow-[8px_8px_0_black]">
             { /* Navigation items */}
             {
                 navigationItemsData.map(({name, icon: Icon, redirectTo}) => (
-                    <Link key={name} href={redirectTo} aria-label={name} className="flex items-center w-full gap-2 pl-7 group cursor-pointer">
+                    <Link key={name} href={redirectTo} aria-label={name} className="flex items-center  sm:w-full gap-2 pl-7 group cursor-pointer">
                         <Icon className={getIconColor(redirectTo, pathname) + ' transition-colors'} />
                         <p className={getTextColor(redirectTo, pathname) + ' text-lg font-bold transition-colors'}>{name}</p>    
                     </Link>

@@ -37,7 +37,7 @@ export default function ClientRefreshLoader({ children }: { children: React.Reac
 
   return<>
     <Header email={user.email} role={user.role} />
-       <div className="flex flex-row flex-1 min-h-0 gap-4">
+       <div className="flex flex-col sm:flex-row flex-1 gap-4">
            <Sidebar />
            <div className="flex flex-col w-full max-h-full overflow-y-auto">
                <div className="p-1">
